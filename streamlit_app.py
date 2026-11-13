@@ -170,9 +170,20 @@ def T(võti, **kw):
 
 
 # ------------------------------------------------------------------ abifunktsioonid
+def _koodi_versioon() -> str:
+    """Muutub, kui kood või infopank muutub – siis luuakse vahemälus uus Hindaja."""
+    juur = Path(__file__).parent
+    failid = list((juur / "hindamisbot").rglob("*.py")) + [juur / "andmed" / "turuulevaated.csv", juur / "seadistused.toml"]
+    return str(max((f.stat().st_mtime_ns for f in failid if f.exists()), default=0))
+
+
 @st.cache_resource
-def hindaja() -> Hindaja:
+def _hindaja(versioon: str) -> Hindaja:
     return Hindaja(lae(Path(__file__).parent / "seadistused.toml"))
+
+
+def hindaja() -> Hindaja:
+    return _hindaja(_koodi_versioon())
 
 
 @st.cache_resource
@@ -383,7 +394,7 @@ if h:
                                                 T("tegur"): round(k.tegur, 3),
                                                 T("põhjendus"): i18n.väärtus(k.põhjendus, K)}
                                                for k in t.korrektsioonid]), hide_index=True, width="stretch")
-    tk = (h.turg or {}).get(K)
+    tk = (getattr(h, "turg", None) or {}).get(K)
     if tk and not tk.tyhi:
         with st.expander(T("turu_kontekst"), expanded=bool(tk.hoiatus)):
             st.markdown("\n".join(f"- **{e(r.silt)}:** {e(r.väärtus)} — "
