@@ -1,0 +1,11 @@
+periood;maakond;omavalitsus;asustusyksus;tyyp;sihtotstarve;pinnavahemik;tehingute arv;mediaan eur m2;min eur m2;max eur m2
+2026 II;Harju maakond;Tallinn;Mustamäe;korteriomand;;40-54,99;38;2310;1550;3120
+2026 III;Harju maakond;Tallinn;Mustamäe;korteriomand;;40-54,99;41;2350;1600;3200
+2026 III;Harju maakond;Tallinn;Mustamäe;korteriomand;;55-69,99;29;2280;1500;3050
+2026 III;Harju maakond;Tallinn;;korteriomand;;40-54,99;612;2890;1200;6800
+2026 III;Tartu maakond;Tartu linn;;hoonestatud elamumaa;;100-200;24;1950;900;3300
+2026 II;Tartu maakond;Tartu linn;;hoonestatud elamumaa;;100-200;21;1900;850;3200
+2026 III;Tartu maakond;Tartu linn;;hoonestamata elamumaa;elamumaa;600-1500;14;62;25;140
+2026 II;Tartu maakond;Tartu linn;;hoonestamata elamumaa;elamumaa;600-1500;11;60;22;130
+2026 III;Harju maakond;Saue vald;;hoonestamata elamumaa;elamumaa;1500-3000;19;34;12;80
+2026 II;Harju maakond;Saue vald;;hoonestamata elamumaa;elamumaa;1500-3000;17;33;10;78

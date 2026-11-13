@@ -1,0 +1,5 @@
+# Pane siia avaandmete väljavõtted:
+#  hinnastatistika.csv  – Maa- ja Ruumiameti hinnastatistika päringukeskkonnast
+#  hinnaindeks.csv      – Maa- ja Ruumiameti hinnaindeks (periood;indeks)
+#  ehitisregister.csv   – ehitisregistri avaandmete väljavõte
+#  vordlusobjektid.csv  – sinu kogutud võrdlusobjektid (vt naidis/vordlusobjektid.csv)

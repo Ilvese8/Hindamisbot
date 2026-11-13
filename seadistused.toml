@@ -1,0 +1,128 @@
+# Hindamisboti seadistused.
+# Kõik koefitsiendid on HINDAJA OTSUSTATAVAD eeldused, mitte turuandmed.
+# Väärtused, mille juures on märge "NÄIDIS", on algväärtused – kontrolli ja täpsusta enne kasutamist.
+
+[liidesed]
+# Maa- ja Ruumiameti aadressiotsing (In-ADS gazetteer). Avalik, päringulimiitidega – vt In-ADS kasutustingimused.
+inads_url = "https://inaadress.maaamet.ee/inaadress/gazetteer"
+# Maa- ja Ruumiameti kinnisvara hinnastatistika päringukeskkonna liides (https://statistika.kataster.ee/kinnisvara/)
+statistika_url = "https://statistika.kataster.ee/api/tehingud"
+# Ehitisregistri avaliku vaate liides (https://livekluster.ehr.ee/ui/ehr/v1/building/<EHR-kood>)
+ehr_url = "https://livekluster.ehr.ee/api"
+# Maa- ja Ruumiameti katastri avalik WFS (sama andmestik, mis X-GIS katastrikaardil)
+kataster_wfs_url = "https://gsavalik.envir.ee/geoserver/kataster/ows"
+# OpenStreetMap Overpass (avalik). Suurema mahu korral kasuta oma Overpassi serverit.
+overpass_url = "https://overpass-api.de/api/interpreter"
+# Päringute vaheline viivitus sekundites (viisakus avalike teenuste suhtes)
+viivitus_s = 1.0
+timeout_s = 30
+kasutajaagent = "hindamisbot/0.1 (kinnisvara hindamise abivahend)"
+# Kui kaua päringute vastuseid vahemälus hoida (statistikat uuendatakse iga 2 nädala tagant)
+vahemalu_paevi = 7
+
+[andmefailid]
+# Maa- ja Ruumiameti kinnisvara hinnastatistika väljavõte(d) (CSV/XLSX, päringukeskkonnast alla laaditud).
+hinnastatistika = "andmed/hinnastatistika.csv"
+# Maa- ja Ruumiameti kinnisvara hinnaindeks kvartalite kaupa (CSV: periood,indeks[,alamindeksi veerud]).
+hinnaindeks = "andmed/hinnaindeks.csv"
+# Ehitisregistri avaandmete väljavõte (CSV). Valikuline – kui puudub, kasutatakse käsitsi sisendit.
+ehitisregister = "andmed/ehitisregister.csv"
+# Hindaja käsitsi kogutud võrdlusobjektid (CSV). Valikuline.
+vordlusobjektid = "andmed/vordlusobjektid.csv"
+
+[statistika]
+# "api" = päri Maa- ja Ruumiameti päringukeskkonnast; "fail" = kasuta ainult kohalikku faili
+allikas = "api"
+ainult_ost_myyk = true      # ainult ostu-müügitehingud (turuväärtus)
+loikeprotsent = 0           # äärmuste lõikamine alt ja ülevalt (%), mõjutab keskmist, mitte mediaani
+periood_kuud = 12           # esmalt viimased 12 kuud; kui tehinguid napib, laiendatakse
+max_periood_kuud = 24
+# Mitu kvartalit tagasi hinnastatistikat arvestada, kui värsket valimit napib
+max_kvartaleid_tagasi = 8
+# Minimaalne tehingute arv, et lahtrit usaldada
+min_tehinguid = 5
+# Piirkonna mediaan peegeldab juba kohaliku elamufondi vanust; ehitusperioodi korrektsioon
+# võib seda topelt arvestada. Lülita sisse, kui objekt erineb piirkonna tüüpilisest ehitusperioodist.
+rakenda_ehitusperioodi = false
+
+[vordlus]
+k = 6                      # mitu kõige sarnasemat objekti kasutada
+max_kaugus_m = 3000        # kaugemaid ei arvestata
+max_vanus_kuud = 24        # vanemaid tehinguid/pakkumisi ei arvestata
+pakkumise_korrektsioon = 0.95   # NÄIDIS: pakkumishind -> tehinguhind (kui allikas on pakkumine)
+
+# --- Korrektsioonid (kordajad) ---
+[korrektsioonid.seisukord]   # NÄIDIS
+"uus" = 1.10
+"väga hea" = 1.05
+"hea" = 1.00
+"rahuldav" = 0.93
+"remondivajadus" = 0.85
+"kapitaalremont" = 0.72
+
+[korrektsioonid.energiaklass]   # NÄIDIS
+A = 1.05
+B = 1.03
+C = 1.01
+D = 1.00
+E = 0.98
+F = 0.96
+G = 0.94
+H = 0.92
+
+[korrektsioonid.korrus]   # NÄIDIS, ainult korteritele
+esimene = 0.96
+viimane_ilma_liftita = 0.97
+muu = 1.00
+
+[korrektsioonid.ehitusaasta]   # NÄIDIS: perioodi tegur võrreldes piirkonna keskmisega
+# võti = perioodi algusaasta; kasutatakse suurimat võtit, mis on <= ehitusaasta
+1900 = 1.00
+1945 = 0.92
+1961 = 0.88
+1991 = 0.97
+2001 = 1.03
+2011 = 1.10
+2021 = 1.18
+
+[korrektsioonid.kaugus]   # NÄIDIS: lähedus teenustele (kaugus meetrites -> tegur)
+"ühistransport_lähedal_m" = 500
+"ühistransport_tegur" = 1.01
+"kool_lähedal_m" = 1000
+kool_tegur = 1.01
+"pood_lähedal_m" = 800
+pood_tegur = 1.01
+"veekogu_lähedal_m" = 300
+veekogu_tegur = 1.04
+
+# --- Kulumeetod (eramud, äripinnad) ---
+[kulu]
+# Uue hoone taastamismaksumus €/m² (NÄIDIS – täpsusta ehitushinnaindeksi ja tegelike hindadega)
+taastamismaksumus_eur_m2 = { eramu = 1800.0, aripind = 1400.0 }
+# Füüsilise kulumi eluiga aastates (lineaarne), materjali järgi
+eluiga = { kivi = 100, paneel = 80, puit = 70, muu = 80 }
+max_kulum = 0.80
+# Ettevõtja tulu / arendaja kasum (NÄIDIS)
+arendaja_kasum = 0.05
+
+# --- Lepitamise baaskaalud objektitüübi järgi ---
+# Lõplik kaal = baaskaal * meetodi usaldus, normaliseeritud.
+[kaalud.korter]
+statistika = 0.5
+"võrdlus" = 0.5
+kulu = 0.0
+
+[kaalud.eramu]
+statistika = 0.35
+"võrdlus" = 0.40
+kulu = 0.25
+
+[kaalud.maa]
+statistika = 0.6
+"võrdlus" = 0.4
+kulu = 0.0
+
+[kaalud.aripind]
+statistika = 0.3
+"võrdlus" = 0.4
+kulu = 0.3

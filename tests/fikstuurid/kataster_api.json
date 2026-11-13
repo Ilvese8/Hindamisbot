@@ -1,0 +1,42 @@
+{
+  "_markus": "Vastuste kuju statistika.kataster.ee/api/tehingud liidesest, salvestatud 13.11.2026. Allikas: Maa- ja Ruumiamet, tehingute andmebaas. Read on lühendatud.",
+  "filter/maakonnad": [{"mkKood": "0037", "mkNimi": "Harju maakond"}, {"mkKood": "0079", "mkNimi": "Tartu maakond"}],
+  "filter/omavalitsused?mkKood=0037": [
+    {"mkNimi": "Harju maakond", "ovKood": "0784", "ovNimi": "Tallinn", "ovTyyp": "linn", "parentOvKood": null},
+    {"mkNimi": "Harju maakond", "ovKood": "0482", "ovNimi": "Mustamäe linnaosa", "ovTyyp": "linnaosa", "parentOvKood": "0784"},
+    {"mkNimi": "Harju maakond", "ovKood": "0298", "ovNimi": "Kesklinna linnaosa", "ovTyyp": "linnaosa", "parentOvKood": "0784"},
+    {"mkNimi": "Harju maakond", "ovKood": "0141", "ovNimi": "Anija vald", "ovTyyp": "vald", "parentOvKood": null}
+  ],
+  "filter/omavalitsused?mkKood=0079": [
+    {"mkNimi": "Tartu maakond", "ovKood": "0793", "ovNimi": "Tartu linn", "ovTyyp": "linn", "parentOvKood": null}
+  ],
+  "filter/asumid?ovKood=0793": [
+    {"asumKood": "1681", "asumNimi": "Haage küla", "asumTyyp": "küla"},
+    {"asumKood": "2050", "asumNimi": "Ilmatsalu alevik", "asumTyyp": "alevik"}
+  ],
+  "hinnad|korterid_ehitusaasta|asum=0482": [
+    {"arv": 697, "nimi": "1940-1970", "peidetud": false, "yhikuHindMed": "2511.42", "yhikuHindKeskm": "2567.05", "yhikuHindHalve": "557.11", "yhikuHindMin": "305.00", "yhikuHindMaks": "4554.46", "pindalaKeskm": "45.28", "hindMed": "113000.00"},
+    {"arv": 303, "nimi": "1971-1990", "peidetud": false, "yhikuHindMed": "2452.70", "yhikuHindKeskm": "2509.91", "yhikuHindHalve": "555.90", "yhikuHindMin": "830.56", "yhikuHindMaks": "4957.26", "pindalaKeskm": "49.85", "hindMed": "120000.00"},
+    {"arv": 2, "nimi": "1991-2000", "peidetud": true, "yhikuHindMed": null},
+    {"arv": 60, "nimi": "2016-2020", "peidetud": false, "yhikuHindMed": "3528.68", "yhikuHindKeskm": "3424.56", "yhikuHindHalve": "609.93", "yhikuHindMin": "540.27", "yhikuHindMaks": "4702.19", "pindalaKeskm": "57.24", "hindMed": "196500.00"}
+  ],
+  "hinnad|korteriomand|asum=0482": [
+    {"arv": 115, "nimi": "10-29,99", "peidetud": false, "yhikuHindMed": "3047.46"},
+    {"arv": 101, "nimi": "30-40,99", "peidetud": false, "yhikuHindMed": "2900.00"},
+    {"arv": 607, "nimi": "41-54,99", "peidetud": false, "yhikuHindMed": "2587.80"}
+  ],
+  "hinnad|eluhooned_ehitusaasta|ov=0793": [
+    {"arv": 17, "nimi": "1940-1970", "peidetud": false, "yhikuHindMed": "1890.61", "pindalaKeskm": "121.27", "hindMed": "205000.00"},
+    {"arv": 68, "nimi": "1971-1990", "peidetud": false, "yhikuHindMed": "1602.47", "pindalaKeskm": "138.01", "hindMed": "197500.00"},
+    {"arv": 9, "nimi": "2001-2010", "peidetud": false, "yhikuHindMed": "1303.21", "pindalaKeskm": "241.60", "hindMed": "300000.00"},
+    {"arv": 3, "nimi": "2011-2015", "peidetud": true, "yhikuHindMed": null}
+  ],
+  "hinnad|ehitise_liik|ov=0793": [
+    {"arv": 118, "nimi": "Elamu", "peidetud": false, "yhikuHindMed": "1553.00", "pindalaKeskm": "178.29", "hindMed": "217500.00"}
+  ],
+  "hinnad|hoonestamata_maa|ov=0793": [
+    {"arv": 49, "nimi": "Elamumaa", "peidetud": false, "yhikuHindMed": "100.36", "pindalaKeskm": "2148.33", "hindMed": "120000.00"},
+    {"arv": 6, "nimi": "Maatulundusmaa", "peidetud": false, "yhikuHindMed": "4.41", "pindalaKeskm": "40451.33", "hindMed": "52000.00"},
+    {"arv": 2, "nimi": "Ärimaa", "peidetud": true, "yhikuHindMed": null}
+  ]
+}
