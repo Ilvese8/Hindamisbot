@@ -68,6 +68,8 @@ def statistika_meetod(o: Objekt, stat, indeks: Hinnaindeks, s, kuupäev: date) -
     if r.allikas == "api":
         grupp = võrdlusgrupp(rida.get("liik"), rida.get("nimi"))
         t.andmed["võrdlusgrupp"] = f"{grupp}, {rida.get('piirkond')}, {r.perioodid[0]}"
+        t.andmed.update(grupp=grupp, grupp_piirkond=rida.get("piirkond"), grupp_periood=r.perioodid[0],
+                        grupp_tehinguid=r.tehinguid)
         t.selgitus.append(f"Võrdlusgrupp: {grupp} – {rida.get('piirkond')}, {r.perioodid[0]}, "
                           f"{r.tehinguid} ostu-müügitehingut, mediaan {n(baas)} €/m² ({alus}). "
                           f"Allikas: Maa- ja Ruumiamet, tehingute andmebaas ({rida.get('liik')}).")

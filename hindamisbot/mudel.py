@@ -68,6 +68,8 @@ class Objekt:
     kinnistu_nr: Optional[str] = None            # kinnistusraamatu registriosa number
     maa_maksustamishind: Optional[float] = None  # maa korralise hindamise maksustamishind
     katastri_markus: Optional[str] = None
+    krundi_kuju: Optional[list] = None          # polügooni rõngad L-EST97 meetrites (joonise jaoks)
+    hoone_kuju: Optional[list] = None
     # Asukohatunnused (OSM)
     kaugused_m: dict = field(default_factory=dict)
     # Märkused andmete päritolu kohta: väli -> allikas

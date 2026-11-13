@@ -70,6 +70,7 @@ class Ehitis:
     esmane_kasutus: int | None = None             # EHR-i väli "esmase kasutuselevõtu aasta"
     ehitusaasta_allikas: str | None = None        # millisest dokumendist ehitusaasta pärineb
     rekonstrueeritud: int | None = None           # viimase rekonstrueerimise/ümberehituse kasutusloa aasta
+    kujud: list = field(default_factory=list)     # hoone kontuurid L-EST97 meetrites
 
     @property
     def materjal(self):
@@ -126,6 +127,9 @@ def parsi(andmed: dict, energia: list | None = None) -> Ehitis | None:
                           if k.get("katastritunnus")],
         osad=osad,
     )
+    from .kataster import polügoonid
+    for r in _list(e, "ehitiseKujud", "ruumikuju"):
+        ehitis.kujud += polügoonid(r.get("geometry")) or []
     ehitis.esmane_kasutus = ehitis.ehitusaasta
     ehitis.ehitusaasta_allikas = "esmase kasutuselevõtu aasta" if ehitis.ehitusaasta else None
     # Energiamärgis: uusim registrisse kantud märgis
@@ -260,6 +264,8 @@ def rikasta(o: Objekt, e: Ehitis, osa: Hooneosa | None, kuupäev: date | None = 
     o.maara("materjal", e.materjal, src)
     o.maara("lift", e.lift, src)
     o.maara("ehitise_otstarve", e.otstarve, src)
+    if e.kujud:
+        o.maara("hoone_kuju", e.kujud, src)
     if e.katastritunnused:
         o.maara("katastritunnus", e.katastritunnused[0], src)
     if e.energiaklass:

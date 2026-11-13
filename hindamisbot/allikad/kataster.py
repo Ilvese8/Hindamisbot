@@ -29,6 +29,7 @@ class Katastriyksus:
     maks_hind: float | None = None
     markus: str | None = None
     kolvikud: dict = field(default_factory=dict)
+    kuju: list | None = None        # [[ [x, y], ... ], ...] välisrõngad L-EST97 meetrites
 
     @property
     def peamine_sihtotstarve(self) -> str | None:
@@ -44,6 +45,17 @@ def _f(v):
         return float(v)
     except (TypeError, ValueError):
         return None
+
+
+def polügoonid(geom: dict | None) -> list | None:
+    """GeoJSON Polygon/MultiPolygon → välisrõngaste loend."""
+    if not geom or not geom.get("coordinates"):
+        return None
+    if geom.get("type") == "Polygon":
+        return [geom["coordinates"][0]]
+    if geom.get("type") == "MultiPolygon":
+        return [p[0] for p in geom["coordinates"] if p]
+    return None
 
 
 def parsi(props: dict) -> Katastriyksus | None:
@@ -74,6 +86,14 @@ class Kataster:
             p["propertyName"] = väljad
         return self.k.json(self.url, params=p)
 
+    def kuju(self, tunnus: str) -> list | None:
+        """Katastriüksuse piir (L-EST97). Multipolügooni korral kõigi osade välisrõngad."""
+        try:
+            v = self._paring("ky_kehtiv", tunnus, "tunnus,geom")
+        except ConnectionError:
+            return None
+        return polügoonid((((v or {}).get("features") or [{}])[0] or {}).get("geometry"))
+
     def yksus(self, tunnus: str) -> Katastriyksus | None:
         tunnus = str(tunnus).strip()
         if not TUNNUS.match(tunnus):          # kaitse CQL-süstimise ja vigase sisendi eest
@@ -85,7 +105,10 @@ class Kataster:
                 continue
             feats = (v or {}).get("features") or []
             if feats:
-                return parsi(feats[0].get("properties") or {})
+                ky = parsi(feats[0].get("properties") or {})
+                if ky:
+                    ky.kuju = polügoonid(feats[0].get("geometry")) or self.kuju(tunnus)
+                return ky
         return None
 
 
@@ -99,6 +122,7 @@ def rikasta(o: Objekt, ky: Katastriyksus) -> list[str]:
     o.maara("omandivorm", ky.omandivorm, src)
     o.maara("kinnistu_nr", ky.kinnistu_nr, src)
     o.maara("maa_maksustamishind", ky.maks_hind, src)
+    o.maara("krundi_kuju", ky.kuju, src)
     if ky.markus:
         o.maara("katastri_markus", ky.markus, src)
         hoiatused.append(f"Katastri märge: {ky.markus}.")

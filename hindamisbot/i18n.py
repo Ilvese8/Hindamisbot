@@ -15,12 +15,26 @@ KEELED = {"et": "Eesti", "en": "English"}
 _T = {
     # --- veebiliides
     "pealkiri": ("Sinu kinnisvara turuväärtus", "Your property's market value"),
+    "sissejuhatus": ("Vali aadress. Kogume kinnistu andmed maakatastrist ja ehitisregistrist, võrdleme neid "
+                     "piirkonna tehingutega ning joonistame sinu krundi plaani.",
+                     "Pick an address. We gather the property's data from the land cadastre and the Building Register, "
+                     "compare it with local transactions and draw your plot plan."),
+    "lahtiütlus": ("Automaatne hinnang avaandmete põhjal, mitte eksperthinnang. Tulemuse peab üle vaatama "
+                   "kutsetunnistusega hindaja.",
+                   "Automated estimate from open data, not an expert valuation. A certified valuer must review "
+                   "the result."),
+    "tühi_plaan": ("Siia joonistub sinu krundi plaan", "Your plot plan will be drawn here"),
+    "plaan_puudub": ("Krundi kuju pole saadaval", "Plot outline not available"),
+    "krundi_pind": ("Krundi pind", "Plot area"),
+    "hinnatud": ("Hinnatud", "Valued"),
+    "mõõtkavas": ("Mõõtkavas plaan: krundi piir maakatastrist, hoone ehitisregistrist",
+                  "Plan to scale: plot boundary from the land cadastre, building from the Building Register"),
     "alapealkiri": ("Testversioon. Automaatne hinnang avaandmete põhjal – **ei ole eksperthinnang**. "
                     "Tulemuse peab üle kontrollima kutsetunnistusega hindaja.",
                     "Test version. Automated estimate based on Estonian open data – **not an expert valuation**. "
                     "The result must be reviewed by a certified valuer."),
     "aadress": ("Aadress", "Address"),
-    "aadress_koht": ("Objekti aadress, nt Heki tee 6 Haabneeme", "Property address, e.g. Heki tee 6 Haabneeme"),
+    "aadress_koht": ("Objekti aadress", "Property address"),
     "aadress_abi": ("Hakka trükkima ja vali pakutud aadress", "Start typing and pick a suggested address"),
     "osa": ("Korter / hooneosa", "Apartment / building unit"),
     "osa_abi": ("Kortermajas vali korteri number. Eramu või terve hoone puhul jäta „Terve hoone / krunt“.",
