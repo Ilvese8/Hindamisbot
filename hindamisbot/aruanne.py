@@ -3,119 +3,114 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from . import i18n
 from .mudel import Hinnang
 
 MEETODI_NIMI = {"statistika": "Turustatistika meetod", "võrdlus": "Võrdlusmeetod", "kulu": "Kulumeetod"}
-VÄLJAD = [
-    ("normaliseeritud_aadress", "Aadress"), ("tyyp", "Objekti liik"), ("maakond", "Maakond"),
-    ("omavalitsus", "Omavalitsus"), ("asustusyksus", "Asustusüksus"), ("katastritunnus", "Katastritunnus"),
-    ("ehr_kood", "EHR kood"), ("hooneosa", "Hooneosa"), ("ehitise_otstarve", "Ehitise otstarve"),
-    ("pind_m2", "Pind (m²)"), ("krundi_pind_m2", "Krundi pind (m²)"),
-    ("sihtotstarbed", "Sihtotstarve"), ("omandivorm", "Omandivorm"), ("kinnistu_nr", "Kinnistu (registriosa nr)"),
-    ("maa_maksustamishind", "Maa maksustamishind (€)"), ("katastri_markus", "Katastri märge"), ("ehitusaasta", "Ehitusaasta"), ("rekonstrueeritud", "Hilisem ümberehitus/muudatus (kasutusluba)"), ("korruseid", "Korruseid"),
-    ("korrus", "Korrus"), ("tube", "Tube"), ("materjal", "Materjal"), ("lift", "Lift"), ("energiaklass", "Energiaklass"),
-    ("seisukord", "Seisukord"), ("lat", "Laiuskraad"), ("lon", "Pikkuskraad"),
-]
-KONTROLL = [
-    "Objekt on paikvaatlusel üle vaadatud ja seisukord vastab sisendile.",
-    "Kinnistusraamatu väljavõte on kontrollitud: II jagu (omanik), III jagu (servituudid, kasutusõigused), "
-    "IV jagu (hüpoteegid, märked). Bot neid andmeid ei kogu.",
-    "Ehitisregistri andmed (pind, kasutusluba, otstarve) vastavad tegelikkusele.",
-    "Planeeringud ja kitsendused on kontrollitud (Geoportaal, KOV).",
-    "Võrdlusobjektid on üle vaadatud ja sobivad; korrektsioonid on põhjendatud.",
-    "Seadistuste korrektsioonitegurid on hindaja poolt üle vaadatud ja põhjendatud.",
-    "Lõplik turuväärtus ja selle põhjendus on hindaja otsus (EVS 875).",
-]
-PIIRANGUD = (
-    "See dokument on automaatselt koostatud esmase hinnangu mustand. See ei ole eksperthinnang "
-    "EVS 875 tähenduses enne, kui kutsetunnistusega hindaja on andmed ja järeldused üle kontrollinud ning "
-    "aruande allkirjastanud. Kasutatud on avalikke koondandmeid (Maa- ja Ruumiameti hinnastatistika ja "
-    "hinnaindeks, In-ADS, ehitisregister, OpenStreetMap) ning hindaja sisestatud võrdlusobjekte. "
-    "Müügiportaalide andmeid automaatselt ei koguta."
-)
+VÄLJAD = [(k, i18n.väli(k)) for k in (
+    "normaliseeritud_aadress", "tyyp", "maakond", "omavalitsus", "asustusyksus", "katastritunnus", "ehr_kood",
+    "hooneosa", "ehitise_otstarve", "pind_m2", "krundi_pind_m2", "sihtotstarbed", "omandivorm", "kinnistu_nr",
+    "maa_maksustamishind", "katastri_markus", "ehitusaasta", "rekonstrueeritud", "korruseid", "korrus", "tube",
+    "materjal", "lift", "energiaklass", "seisukord", "lat", "lon")]
+KONTROLL = i18n.kontroll("et")
+PIIRANGUD = i18n.piirangud("et")
 
 
 def eur(v) -> str:
     return "–" if v is None else f"{v:,.0f} €".replace(",", " ")
 
 
-def _väli(o, k):
+def _väli(o, k, keel="et"):
     v = getattr(o, k)
     if hasattr(v, "value"):
         v = v.value
-    if k == "tyyp" and v and o.tyyp_pohjendus:
+    if v is None or v == "":
+        return v
+    if keel == "en":
+        if k == "tyyp":
+            v = i18n.väärtus(v, "en") + (f" (detected: {i18n.tõlgi(o.tyyp_pohjendus, 'en')})" if o.tyyp_pohjendus else "")
+        elif k in ("seisukord", "materjal", "lift", "omandivorm", "sihtotstarbed", "katastri_markus", "hooneosa"):
+            v = i18n.väärtus(v, "en")
+        return v
+    if k == "tyyp" and o.tyyp_pohjendus:
         v = f"{v} (tuvastatud: {o.tyyp_pohjendus})"
+    if k == "lift":
+        v = i18n.väärtus(v, "et")
     return v
 
 
-def markdown(h: Hinnang) -> str:
+def andmeread(o, keel="et") -> list[tuple[str, str, str]]:
+    """(tunnus, väärtus, allikas) – veebiliidese ja aruande jaoks."""
+    return [(i18n.väli(k, keel), str(_väli(o, k, keel)), i18n.väärtus(o.allikad.get(k, "sisend"), keel))
+            for k, _ in VÄLJAD if _väli(o, k, keel) not in (None, "")]
+
+
+def markdown(h: Hinnang, keel: str = "et") -> str:
+    T, tr = (lambda _võti, **kw: i18n.T(_võti, keel, **kw)), (lambda s: i18n.tõlgi(s, keel))
     o = h.objekt
-    L = [f"# Kinnisvara turuväärtuse esmane hinnang", "",
-         f"**MUSTAND – automaatne hinnang, vajab hindaja kontrolli**", "",
-         f"Hindamise kuupäev: {h.hindamise_kuupäev.isoformat()}  ", f"Objekt: {o.normaliseeritud_aadress or o.aadress}",
-         "", "## Kokkuvõte", ""]
+    L = [f"# {T('ar_pealkiri')}", "", f"**{T('ar_mustand')}**", "",
+         f"{T('ar_kuupäev')}: {h.hindamise_kuupäev.isoformat()}  ", f"{T('ar_objekt')}: {o.normaliseeritud_aadress or o.aadress}",
+         "", f"## {T('ar_kokkuvõte')}", ""]
     if h.turuväärtus:
-        L += [f"| Näitaja | Väärtus |", "|---|---|",
-              f"| Hinnanguline turuväärtus | **{eur(h.turuväärtus)}** |",
-              f"| Vahemik | {eur(h.vahemik[0])} – {eur(h.vahemik[1])} |"]
+        L += [f"| {T('ar_näitaja')} | {T('väärtus')} |", "|---|---|",
+              f"| {T('turuväärtus')} | **{eur(h.turuväärtus)}** |",
+              f"| {T('vahemik')} | {eur(h.vahemik[0])} – {eur(h.vahemik[1])} |"]
         pind = o.krundi_pind_m2 if o.tyyp and o.tyyp.value == "maa" else o.pind_m2
         if pind:
-            L.append(f"| Ühikuhind | {eur(h.turuväärtus / pind)}/m² |")
+            L.append(f"| {T('ühikuhind')} | {eur(h.turuväärtus / pind)}/m² |")
     else:
-        L.append("Turuväärtust ei õnnestunud määrata – vt hoiatusi.")
-    L += ["", "## Hinnatav objekt", "", "| Tunnus | Väärtus | Allikas |", "|---|---|---|"]
-    for k, nimi in VÄLJAD:
-        v = _väli(o, k)
-        if v not in (None, ""):
-            L.append(f"| {nimi} | {v} | {o.allikad.get(k, 'sisend')} |")
+        L.append(T("ei_õnnestunud"))
+    L += ["", f"## {T('ar_hinnatav')}", "", f"| {T('tunnus')} | {T('väärtus')} | {T('allikas')} |", "|---|---|---|"]
+    L += [f"| {a} | {b} | {c} |" for a, b, c in andmeread(o, keel)]
     if o.kaugused_m:
-        L += ["", "### Asukoht (lähimad teenused, OpenStreetMap)", "", "| Kategooria | Kaugus |", "|---|---|"]
-        L += [f"| {k} | {v} m |" for k, v in sorted(o.kaugused_m.items())]
-    L += ["", "## Meetodid", ""]
+        L += ["", f"### {T('ar_asukoht')}", "", f"| {T('ar_kategooria')} | {T('ar_kaugus')} |", "|---|---|"]
+        L += [f"| {i18n.väärtus(k, keel)} | {v} m |" for k, v in sorted(o.kaugused_m.items())]
+    L += ["", f"## {T('ar_meetodid')}", ""]
     for t in h.tulemused:
         if not (t.kehtiv or t.hoiatused):
             continue
-        L += [f"### {MEETODI_NIMI.get(t.meetod, t.meetod)}", ""]
+        L += [f"### {i18n.meetod(t.meetod, keel)}", ""]
         if t.kehtiv:
-            L.append(f"Tulemus: **{eur(t.väärtus)}** ({eur(t.eur_m2)}/m²), vahemik "
-                     f"{eur(t.vahemik[0])} – {eur(t.vahemik[1])}, usaldus {t.usaldus:.2f}, "
-                     f"kaal lepitamisel {h.kaalud.get(t.meetod, 0):.0%}.")
-            L.append("")
-        L += [f"- {x}" for x in t.selgitus]
+            L += [T("ar_tulemus", v=eur(t.väärtus), m2=eur(t.eur_m2), a=eur(t.vahemik[0]), b=eur(t.vahemik[1]),
+                    u=t.usaldus, k=h.kaalud.get(t.meetod, 0)), ""]
+        L += [f"- {tr(x)}" for x in t.selgitus]
         if t.korrektsioonid:
-            L += ["", "| Korrektsioon | Tegur | Põhjendus |", "|---|---|---|"]
-            L += [f"| {k.nimi} | {k.tegur:.3f} | {k.põhjendus} |" for k in t.korrektsioonid]
+            L += ["", f"| {T('korrektsioon')} | {T('tegur')} | {T('põhjendus')} |", "|---|---|---|"]
+            L += [f"| {i18n.korrektsioon(k.nimi, keel)} | {k.tegur:.3f} | {i18n.väärtus(k.põhjendus, keel)} |"
+                  for k in t.korrektsioonid]
         vo = t.andmed.get("võrdlusobjektid")
         if vo:
-            L += ["", "| Aadress | Kaugus | Kuupäev | Liik | m² | Hind | €/m² | Korrektsioonid | Korr. €/m² | Allikas |",
-                  "|---|---|---|---|---|---|---|---|---|---|"]
+            L += ["", "| " + " | ".join(T("ar_vo_päis").split("|")) + " |", "|---" * 10 + "|"]
             for r in vo:
                 L.append(f"| {r['aadress']} | {r['kaugus_m'] if r['kaugus_m'] is not None else '–'} m | "
-                         f"{r['kuupäev']} | {r['liik']} | {r['pind_m2']:.0f} | {eur(r['hind'])} | {r['eur_m2']} | "
-                         f"{r['korrektsioonid']} | {r['korr_eur_m2']} | {r['allikas']} |")
+                         f"{r['kuupäev']} | {i18n.väärtus(r['liik'], keel)} | {r['pind_m2']:.0f} | {eur(r['hind'])} | "
+                         f"{r['eur_m2']} | {i18n.vo_korrektsioonid(r['korrektsioonid'], keel)} | {r['korr_eur_m2']} | "
+                         f"{r['allikas']} |")
         L.append("")
     if h.hoiatused:
-        L += ["## Hoiatused", ""] + [f"- {x}" for x in h.hoiatused] + [""]
-    L += ["## Hindaja kontrollnimekiri", ""] + [f"- [ ] {x}" for x in KONTROLL]
-    L += ["", "## Eeldused ja piirangud", "", PIIRANGUD, ""]
+        L += [f"## {T('hoiatused')}", ""] + [f"- {tr(x)}" for x in h.hoiatused] + [""]
+    L += [f"## {T('ar_kontroll')}", ""] + [f"- [ ] {x}" for x in i18n.kontroll(keel)]
+    L += ["", f"## {T('ar_piirangud')}", "", i18n.piirangud(keel), ""]
     return "\n".join(L)
 
 
-def docx(h: Hinnang, tee: Path) -> Path:
+def docx(h: Hinnang, tee: Path, keel: str = "et") -> Path:
     from docx import Document
     from docx.shared import Pt, RGBColor
 
+    T, tr = (lambda _võti, **kw: i18n.T(_võti, keel, **kw)), (lambda s: i18n.tõlgi(s, keel))
     o = h.objekt
     d = Document()
     st = d.styles["Normal"]
     st.font.name = "Calibri"
     st.font.size = Pt(10.5)
-    d.add_heading("Kinnisvara turuväärtuse esmane hinnang", 0)
+    d.add_heading(T("ar_pealkiri"), 0)
     p = d.add_paragraph()
-    r = p.add_run("MUSTAND – automaatne hinnang, vajab hindaja kontrolli")
+    r = p.add_run(T("ar_mustand"))
     r.bold = True
     r.font.color.rgb = RGBColor(0xB0, 0x3A, 0x2E)
-    d.add_paragraph(f"Hindamise kuupäev: {h.hindamise_kuupäev.isoformat()}\nObjekt: {o.normaliseeritud_aadress or o.aadress}")
+    d.add_paragraph(f"{T('ar_kuupäev')}: {h.hindamise_kuupäev.isoformat()}\n"
+                    f"{T('ar_objekt')}: {o.normaliseeritud_aadress or o.aadress}")
 
     def tabel(päis, read):
         t = d.add_table(rows=1, cols=len(päis))
@@ -128,49 +123,51 @@ def docx(h: Hinnang, tee: Path) -> Path:
                 c[i].text = "" if x is None else str(x)
         d.add_paragraph()
 
-    d.add_heading("Kokkuvõte", 1)
+    d.add_heading(T("ar_kokkuvõte"), 1)
     if h.turuväärtus:
-        read = [["Hinnanguline turuväärtus", eur(h.turuväärtus)],
-                ["Vahemik", f"{eur(h.vahemik[0])} – {eur(h.vahemik[1])}"]]
+        read = [[T("turuväärtus"), eur(h.turuväärtus)], [T("vahemik"), f"{eur(h.vahemik[0])} – {eur(h.vahemik[1])}"]]
         pind = o.krundi_pind_m2 if o.tyyp and o.tyyp.value == "maa" else o.pind_m2
         if pind:
-            read.append(["Ühikuhind", f"{eur(h.turuväärtus / pind)}/m²"])
-        tabel(["Näitaja", "Väärtus"], read)
+            read.append([T("ühikuhind"), f"{eur(h.turuväärtus / pind)}/m²"])
+        tabel([T("ar_näitaja"), T("väärtus")], read)
     else:
-        d.add_paragraph("Turuväärtust ei õnnestunud määrata – vt hoiatusi.")
+        d.add_paragraph(T("ei_õnnestunud"))
 
-    d.add_heading("Hinnatav objekt", 1)
-    tabel(["Tunnus", "Väärtus", "Allikas"],
-          [[n, _väli(o, k), o.allikad.get(k, "sisend")] for k, n in VÄLJAD if _väli(o, k) not in (None, "")])
+    d.add_heading(T("ar_hinnatav"), 1)
+    tabel([T("tunnus"), T("väärtus"), T("allikas")], andmeread(o, keel))
     if o.kaugused_m:
-        d.add_heading("Asukoht (lähimad teenused, OpenStreetMap)", 2)
-        tabel(["Kategooria", "Kaugus (m)"], sorted(o.kaugused_m.items()))
+        d.add_heading(T("ar_asukoht"), 2)
+        tabel([T("ar_kategooria"), T("ar_kaugus") + " (m)"],
+              [(i18n.väärtus(k, keel), v) for k, v in sorted(o.kaugused_m.items())])
 
-    d.add_heading("Meetodid", 1)
+    d.add_heading(T("ar_meetodid"), 1)
     for t in h.tulemused:
         if not (t.kehtiv or t.hoiatused):
             continue
-        d.add_heading(MEETODI_NIMI.get(t.meetod, t.meetod), 2)
+        d.add_heading(i18n.meetod(t.meetod, keel), 2)
         if t.kehtiv:
-            d.add_paragraph(f"Tulemus {eur(t.väärtus)} ({eur(t.eur_m2)}/m²), vahemik {eur(t.vahemik[0])} – "
-                            f"{eur(t.vahemik[1])}, usaldus {t.usaldus:.2f}, kaal {h.kaalud.get(t.meetod, 0):.0%}.")
+            d.add_paragraph(T("ar_tulemus_docx", v=eur(t.väärtus), m2=eur(t.eur_m2), a=eur(t.vahemik[0]),
+                              b=eur(t.vahemik[1]), u=t.usaldus, k=h.kaalud.get(t.meetod, 0)))
         for x in t.selgitus:
-            d.add_paragraph(x, style="List Bullet")
+            d.add_paragraph(tr(x), style="List Bullet")
         if t.korrektsioonid:
-            tabel(["Korrektsioon", "Tegur", "Põhjendus"], [[k.nimi, f"{k.tegur:.3f}", k.põhjendus] for k in t.korrektsioonid])
+            tabel([T("korrektsioon"), T("tegur"), T("põhjendus")],
+                  [[i18n.korrektsioon(k.nimi, keel), f"{k.tegur:.3f}", i18n.väärtus(k.põhjendus, keel)]
+                   for k in t.korrektsioonid])
         vo = t.andmed.get("võrdlusobjektid")
         if vo:
-            tabel(["Aadress", "Kaugus m", "Kuupäev", "Liik", "m²", "Hind", "€/m²", "Korrektsioonid", "Korr. €/m²"],
-                  [[r["aadress"], r["kaugus_m"], r["kuupäev"], r["liik"], f"{r['pind_m2']:.0f}", eur(r["hind"]),
-                    r["eur_m2"], r["korrektsioonid"], r["korr_eur_m2"]] for r in vo])
+            tabel(T("ar_vo_päis").split("|")[:9],
+                  [[r["aadress"], r["kaugus_m"], r["kuupäev"], i18n.väärtus(r["liik"], keel), f"{r['pind_m2']:.0f}",
+                    eur(r["hind"]), r["eur_m2"], i18n.vo_korrektsioonid(r["korrektsioonid"], keel), r["korr_eur_m2"]]
+                   for r in vo])
     if h.hoiatused:
-        d.add_heading("Hoiatused", 1)
+        d.add_heading(T("hoiatused"), 1)
         for x in h.hoiatused:
-            d.add_paragraph(x, style="List Bullet")
-    d.add_heading("Hindaja kontrollnimekiri", 1)
-    for x in KONTROLL:
+            d.add_paragraph(tr(x), style="List Bullet")
+    d.add_heading(T("ar_kontroll"), 1)
+    for x in i18n.kontroll(keel):
         d.add_paragraph("☐ " + x)
-    d.add_heading("Eeldused ja piirangud", 1)
-    d.add_paragraph(PIIRANGUD)
+    d.add_heading(T("ar_piirangud"), 1)
+    d.add_paragraph(i18n.piirangud(keel))
     d.save(tee)
     return tee
