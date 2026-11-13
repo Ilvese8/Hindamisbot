@@ -74,8 +74,8 @@ def otsi_aadressi(tekst: str) -> list[tuple[str, str]]:
 
 
 valitud = st_searchbox(otsi_aadressi, label="Aadress", key="aadress",
-                       placeholder="Hakka trükkima, nt Heki tee 6 Haabneeme", debounce=300,
-                       help="Vali aadress pakutud valikutest – nii on aadress kindlasti õige.")
+                       placeholder="Objekti aadress", debounce=300,
+                       help="Hakka trükkima (nt „Heki tee 6 Haabneeme“) ja vali aadress pakutud valikutest.")
 g = st.session_state.get("aadressid", {}).get(valitud) if valitud else None
 
 osa_valik = None
@@ -158,7 +158,9 @@ if h:
         if stat and stat.andmed.get("võrdlusgrupp"):
             st.info(f"**Võrreldi:** {stat.andmed['võrdlusgrupp']}"
                     + (f"  \n**Arvestatud:** {stat.andmed['ehitusaasta_arvestus']}"
-                       if stat.andmed.get("ehitusaasta_arvestus") else ""))
+                       if stat.andmed.get("ehitusaasta_arvestus") else "")
+                    + (f"  \n**Ehitusaasta allikas:** {stat.andmed['ehitusaasta_allikas']}"
+                       if stat.andmed.get("ehitusaasta_allikas") else ""))
         read = [{"Meetod": aruanne.MEETODI_NIMI[t.meetod], "Väärtus": eur(t.väärtus), "€/m²": eur(t.eur_m2),
                  "Kaal": f"{h.kaalud.get(t.meetod, 0):.0%}"} for t in h.tulemused if t.kehtiv]
         st.dataframe(pd.DataFrame(read), hide_index=True, width="stretch")

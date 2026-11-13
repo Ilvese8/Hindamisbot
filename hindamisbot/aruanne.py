@@ -12,7 +12,7 @@ VÄLJAD = [
     ("ehr_kood", "EHR kood"), ("hooneosa", "Hooneosa"), ("ehitise_otstarve", "Ehitise otstarve"),
     ("pind_m2", "Pind (m²)"), ("krundi_pind_m2", "Krundi pind (m²)"),
     ("sihtotstarbed", "Sihtotstarve"), ("omandivorm", "Omandivorm"), ("kinnistu_nr", "Kinnistu (registriosa nr)"),
-    ("maa_maksustamishind", "Maa maksustamishind (€)"), ("katastri_markus", "Katastri märge"), ("ehitusaasta", "Ehitusaasta"), ("korruseid", "Korruseid"),
+    ("maa_maksustamishind", "Maa maksustamishind (€)"), ("katastri_markus", "Katastri märge"), ("ehitusaasta", "Ehitusaasta"), ("rekonstrueeritud", "Hilisem ümberehitus/muudatus (kasutusluba)"), ("korruseid", "Korruseid"),
     ("korrus", "Korrus"), ("tube", "Tube"), ("materjal", "Materjal"), ("lift", "Lift"), ("energiaklass", "Energiaklass"),
     ("seisukord", "Seisukord"), ("lat", "Laiuskraad"), ("lon", "Pikkuskraad"),
 ]

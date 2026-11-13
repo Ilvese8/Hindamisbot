@@ -87,6 +87,8 @@ def statistika_meetod(o: Objekt, stat, indeks: Hinnaindeks, s, kuupäev: date) -
         (bool(o.ehitusaasta) and not grupp_ehitusaasta_järgi)
     t.korrektsioonid += kr.objekti_korrektsioonid(s, o, ehitusperiood=rakenda_aasta)
     if o.ehitusaasta and o.tyyp.value != "maa":
+        aasta_allikas = o.allikad.get("ehitusaasta", "sisend").replace("Ehitisregister: ", "EHR – ")
+        t.andmed["ehitusaasta_allikas"] = aasta_allikas
         t.andmed["ehitusaasta_arvestus"] = (
             f"ehitusaasta {o.ehitusaasta}: võrreldi sama ehitusperioodi ({rida.get('nimi')}) tehingutega"
             if grupp_ehitusaasta_järgi else

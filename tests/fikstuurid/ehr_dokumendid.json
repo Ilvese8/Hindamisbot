@@ -1,0 +1,21 @@
+{"_markus": "Ehitisregistri dokumentide loendi kuju (livekluster.ehr.ee/api/document/v1/document/building/<kood>), 13.11.2026, lühendatud",
+ "101019881": [
+  {"documentType": "Hooneregistri ehitise teatis", "date": "2003-12-30T22:00:00.000+00:00", "documentState": "DO_DOKUSEIS_REG_KANTUD", "documentNumber": "784/15225(E1)"},
+  {"documentType": "Ehitusluba ehitise rekonstrueerimiseks", "date": "2005-12-13T22:00:00.000+00:00", "documentState": "DO_DOKUSEIS_REG_KANTUD", "documentNumber": "14983"},
+  {"documentType": "Kasutusloa taotlus ehitise rekonstrueerimisel", "date": "2007-03-19T22:00:00.000+00:00", "documentState": "DO_DOKUSEIS_REG_KANTUD", "documentNumber": "24080"},
+  {"documentType": "Kasutusluba ehitise rekonstrueerimisel", "date": "2007-03-20T22:00:00.000+00:00", "documentState": "DO_DOKUSEIS_REG_KANTUD", "documentNumber": "6224"},
+  {"documentType": "Kasutusteatis ehitise ümberehitamisel", "date": "2016-02-05T08:25:11.000+00:00", "documentState": "DO_DOKUSEIS_REG_KANTUD", "documentNumber": "1611304/00157"},
+  {"documentType": "Kasutusteatis", "date": "2024-10-14T12:19:27.840+00:00", "documentState": "DO_DOKUSEIS_LUBATUD", "documentNumber": "2411301/10326"},
+  {"documentType": "Kasutusloa taotlus", "date": "2025-03-05T15:01:33.765+00:00", "documentState": "DO_DOKUSEIS_KEELDUTUD", "documentNumber": "2511371/02766"},
+  {"documentType": "Kasutusluba", "date": "2026-11-03T11:38:28.889+00:00", "documentState": "DO_DOKUSEIS_ANTUD", "documentNumber": "2612371/04364"}],
+ "120310725": [
+  {"documentType": "Ehitusluba ehitise püstitamiseks", "date": "2004-04-26T10:54:45.000+00:00", "documentState": "DO_DOKUSEIS_REG_KANTUD", "documentNumber": "2295"},
+  {"documentType": "Ehitamise alustamise teatis", "date": "2004-04-29T14:03:56.000+00:00", "documentState": "DO_DOKUSEIS_REG_KANTUD", "documentNumber": "2406"},
+  {"documentType": "Ehitusluba ehitise püstitamiseks", "date": "2006-09-10T21:00:00.000+00:00", "documentState": "DO_DOKUSEIS_REG_KANTUD", "documentNumber": "7305"},
+  {"documentType": "Kasutusloa taotlus ehitise püstitamisel", "date": "2007-04-23T21:00:00.000+00:00", "documentState": "DO_DOKUSEIS_REG_KANTUD", "documentNumber": "9409"},
+  {"documentType": "Kasutusluba ehitise püstitamisel", "date": "2007-04-23T21:00:00.000+00:00", "documentState": "DO_DOKUSEIS_REG_KANTUD", "documentNumber": "9410"},
+  {"documentType": "Energiaarvutusel põhineva energiamärgise teatis (väljastatud enne 03.05.2013)", "date": "2015-11-05T11:30:22.000+00:00", "documentState": "DO_DOKUSEIS_KEHTETU", "documentNumber": "1511573/00561"},
+  {"documentType": "Kasutusteatis", "date": "2018-11-22T14:11:10.000+00:00", "documentState": "DO_DOKUSEIS_LUBATUD", "documentNumber": "1811301/10502"}],
+ "116012345": [
+  {"documentType": "Hooneregistri ehitise teatis", "date": "2003-12-30T22:00:00.000+00:00", "documentState": "DO_DOKUSEIS_REG_KANTUD", "documentNumber": "423/160(E2)"}]
+}

@@ -264,6 +264,7 @@ from hindamisbot.allikad.inads import eralda_hooneosa  # noqa: E402
 FDIR = Path(__file__).parent / "fikstuurid"
 EHR_JSON = json.loads((FDIR / "ehr_101019881.json").read_text(encoding="utf-8"))
 EHR_ENERGIA = json.loads((FDIR / "ehr_101019881_energia.json").read_text(encoding="utf-8"))
+EHR_DOK = json.loads((FDIR / "ehr_dokumendid.json").read_text(encoding="utf-8"))
 INADS_JSON = json.loads((FDIR / "inads_ehitajate35.json").read_text(encoding="utf-8"))
 
 
@@ -326,6 +327,8 @@ class KoguKlient(FakeKlient):
             return EHR_JSON
         if "buildingRelatedEnergyCertificates" in url:
             return EHR_ENERGIA
+        if "/document/v1/document/building/" in url:
+            return EHR_DOK["101019881"]
         if "overpass" in url:
             return {"elements": [{"type": "node", "lat": 59.4015, "lon": 24.6690, "tags": {"highway": "bus_stop"}}]}
         return super().json(url, params, **kw)
@@ -537,3 +540,46 @@ def test_ehitusaasta_arvestus(s):
     t2 = next(x for x in h.hinda(o2, kuupäev=KP).tulemused if x.meetod == "statistika")
     assert "kõik ehitusaastad" in t2.andmed["võrdlusgrupp"]
     assert any(k.nimi == "Ehitusperiood" for k in t2.korrektsioonid)
+
+
+
+# ---------------------------------------------------------------- ehitusaasta dokumentidest
+@pytest.mark.parametrize("kood,esmane,oodatud_aasta,allikas_sisaldab,rek", [
+    # 1964 paneelmaja: hilisemad kasutusload on rekonstrueerimise/ümberehituse omad → ehitusaasta jääb 1964
+    ("101019881", 1964, 1964, "esmase kasutuselevõtu", 2026),
+    # uusehitis: kasutusluba ehitise püstitamisel 2007 (ka siis, kui esmane kasutuselevõtt on puudu)
+    # 2018 täpsustuseta kasutusteatis on 11 aastat hilisem → muudatus, mitte ehitusaasta
+    ("120310725", None, 2007, "Kasutusluba ehitise püstitamisel nr 9410", 2018),
+    ("120310725", 2006, 2007, "Kasutusluba ehitise püstitamisel", 2018),
+    # dokumente pole → esmane kasutuselevõtt
+    ("116012345", 2001, 2001, "esmase kasutuselevõtu", None),
+])
+def test_ehitusaasta_dokumentidest(kood, esmane, oodatud_aasta, allikas_sisaldab, rek):
+    from hindamisbot.allikad.ehr_api import ehitusaasta_dokumentidest
+    aasta, allikas, r = ehitusaasta_dokumentidest(EHR_DOK[kood], esmane)
+    assert aasta == oodatud_aasta and allikas_sisaldab in allikas and r == rek
+
+
+def test_ehitusaasta_ehitusloast_kui_kasutusluba_puudub():
+    from hindamisbot.allikad.ehr_api import ehitusaasta_dokumentidest
+    dok = [d for d in EHR_DOK["120310725"] if "Kasutusluba" not in d["documentType"]
+           and d["documentType"] != "Kasutusteatis"]
+    aasta, allikas, _ = ehitusaasta_dokumentidest(dok, None)
+    assert aasta == 2004 and "Ehitusluba ehitise püstitamiseks nr 2295" in allikas
+
+
+def test_aastavahetus_eesti_ajas():
+    from hindamisbot.allikad.ehr_api import ehitusaasta_dokumentidest
+    d = [{"documentType": "Kasutusluba ehitise püstitamisel", "date": "2009-12-31T22:30:00.000+00:00",
+          "documentState": "DO_DOKUSEIS_REG_KANTUD", "documentNumber": "1"}]
+    assert ehitusaasta_dokumentidest(d, None)[0] == 2010
+
+
+def test_rikasta_ehitusaasta_allikas_ja_rekonstrueerimine():
+    from hindamisbot.allikad.ehr_api import rakenda_dokumendid
+    e = ehr_api.parsi(EHR_JSON, [])
+    rakenda_dokumendid(e, EHR_DOK["101019881"])
+    o = Objekt("x", ObjektiTyyp.KORTER)
+    h = ehr_api.rikasta(o, e, e.leia_osa("17"), KP)
+    assert o.ehitusaasta == 1964 and "esmase kasutuselevõtu" in o.allikad["ehitusaasta"]
+    assert o.rekonstrueeritud == 2026 and any("ümberehituse" in x for x in h)

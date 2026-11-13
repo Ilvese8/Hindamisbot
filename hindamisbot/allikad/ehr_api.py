@@ -67,6 +67,9 @@ class Ehitis:
     energiaklass: str | None = None
     energiamargise_kp: date | None = None
     osad: list = field(default_factory=list)
+    esmane_kasutus: int | None = None             # EHR-i väli "esmase kasutuselevõtu aasta"
+    ehitusaasta_allikas: str | None = None        # millisest dokumendist ehitusaasta pärineb
+    rekonstrueeritud: int | None = None           # viimase rekonstrueerimise/ümberehituse kasutusloa aasta
 
     @property
     def materjal(self):
@@ -123,6 +126,8 @@ def parsi(andmed: dict, energia: list | None = None) -> Ehitis | None:
                           if k.get("katastritunnus")],
         osad=osad,
     )
+    ehitis.esmane_kasutus = ehitis.ehitusaasta
+    ehitis.ehitusaasta_allikas = "esmase kasutuselevõtu aasta" if ehitis.ehitusaasta else None
     # Energiamärgis: uusim registrisse kantud märgis
     märgised = []
     for m in energia or []:
@@ -142,6 +147,75 @@ def parsi(andmed: dict, energia: list | None = None) -> Ehitis | None:
     return ehitis
 
 
+# --------------------------------------------------------------------------- dokumentidest ehitusaasta
+_KEHTETU = ("KEELDUTUD", "KEHTETU", "TAGASI", "MENETLUSES", "ESITATUD", "KOOSTAMISEL")
+
+
+def _dok_kp(d: dict) -> date | None:
+    s = str(d.get("date") or d.get("documentDate") or "")
+    if not s:
+        return None
+    try:
+        dt = datetime.fromisoformat(s.replace("Z", "+00:00"))
+        if dt.tzinfo:  # Eesti aeg: 31.12 kl 22:00 UTC on juba uus aasta
+            from zoneinfo import ZoneInfo
+            dt = dt.astimezone(ZoneInfo("Europe/Tallinn"))
+        return dt.date()
+    except ValueError:
+        return None
+
+
+def _kehtiv(d: dict) -> bool:
+    olek = str(d.get("documentState") or d.get("documentStatusCode") or "").upper()
+    return not any(x in olek for x in _KEHTETU)
+
+
+def ehitusaasta_dokumentidest(dokumendid: list[dict], esmane_kasutus: int | None
+                              ) -> tuple[int | None, str | None, int | None]:
+    """Tagastab (ehitusaasta, allika kirjeldus, rekonstrueerimise aasta).
+
+    Järjekord: 1) kasutusluba/kasutusteatis ehitise püstitamisel (varaseim);
+               2) ehitusluba ehitise püstitamiseks (varaseim);
+               3) EHR-i esmase kasutuselevõtu aasta.
+    Täpsustuseta „Kasutusluba“/„Kasutusteatis“ loetakse püstitamise omaks ainult siis, kui see ei ole
+    esmasest kasutuselevõtust üle 3 aasta hilisem (muidu on see ümberehituse või muu töö luba).
+    Rekonstrueerimise/ümberehituse kasutusload ehitusaastat ei muuda.
+    """
+    kasutus_püst, ehitusluba_püst, rekon, üldised = [], [], [], []
+    for d in dokumendid or []:
+        liik = str(d.get("documentType") or "").lower().strip()
+        kp = _dok_kp(d)
+        if not kp or not _kehtiv(d) or "taotlus" in liik:
+            continue
+        on_kasutus = liik.startswith("kasutusluba") or liik.startswith("kasutusteatis")
+        if on_kasutus and "püstitamisel" in liik:
+            kasutus_püst.append((kp, d))
+        elif on_kasutus and any(x in liik for x in ("rekonstrueerimisel", "ümberehitamisel", "laiendamisel")):
+            rekon.append(kp.year)
+        elif on_kasutus and liik in ("kasutusluba", "kasutusteatis"):
+            üldised.append((kp, d))
+        elif liik.startswith("ehitusluba") and "püstitamiseks" in liik:
+            ehitusluba_püst.append((kp, d))
+    # Täpsustuseta kasutusluba/-teatis: püstitamise oma ainult siis, kui see ei ole teadaolevast
+    # ehitusajast (püstitamise kasutusluba või esmane kasutuselevõtt) üle 3 aasta hilisem
+    alus = min(kasutus_püst, key=lambda x: x[0])[0].year if kasutus_püst else esmane_kasutus
+    for kp, d in üldised:
+        if alus is None or kp.year <= alus + 3:
+            kasutus_püst.append((kp, d))
+        else:
+            rekon.append(kp.year)
+    rek = max(rekon) if rekon else None
+    if kasutus_püst:
+        kp, d = min(kasutus_püst, key=lambda x: x[0])
+        return kp.year, f"{d.get('documentType')} nr {d.get('documentNumber')} ({kp:%d.%m.%Y})", rek
+    if ehitusluba_püst:
+        kp, d = min(ehitusluba_püst, key=lambda x: x[0])
+        return kp.year, f"{d.get('documentType')} nr {d.get('documentNumber')} ({kp:%d.%m.%Y})", rek
+    if esmane_kasutus:
+        return esmane_kasutus, "esmase kasutuselevõtu aasta", rek
+    return None, None, rek
+
+
 class EhrApi:
     def __init__(self, klient: Klient, s):
         self.k = klient
@@ -154,7 +228,21 @@ class EhrApi:
             energia = self.k.json(f"{self.url}/document/v1/document/building/{kood}/buildingRelatedEnergyCertificates")
         except ConnectionError:
             energia = []
-        return parsi(andmed, energia if isinstance(energia, list) else [])
+        try:
+            dokumendid = self.k.json(f"{self.url}/document/v1/document/building/{kood}")
+        except ConnectionError:
+            dokumendid = []
+        e = parsi(andmed, energia if isinstance(energia, list) else [])
+        if e:
+            rakenda_dokumendid(e, dokumendid if isinstance(dokumendid, list) else [])
+        return e
+
+
+def rakenda_dokumendid(e: "Ehitis", dokumendid: list[dict]) -> None:
+    aasta, allikas, rek = ehitusaasta_dokumentidest(dokumendid, e.esmane_kasutus)
+    if aasta:
+        e.ehitusaasta, e.ehitusaasta_allikas = aasta, allikas
+    e.rekonstrueeritud = rek if (rek and (not e.ehitusaasta or rek > e.ehitusaasta)) else None
 
 
 def rikasta(o: Objekt, e: Ehitis, osa: Hooneosa | None, kuupäev: date | None = None) -> list[str]:
@@ -163,7 +251,11 @@ def rikasta(o: Objekt, e: Ehitis, osa: Hooneosa | None, kuupäev: date | None = 
     hoiatused = []
     kuupäev = kuupäev or date.today()
     o.maara("ehr_kood", e.ehr_kood, src)
-    o.maara("ehitusaasta", e.ehitusaasta, src)
+    o.maara("ehitusaasta", e.ehitusaasta, f"{src}: {e.ehitusaasta_allikas}" if e.ehitusaasta_allikas else src)
+    if e.rekonstrueeritud:
+        o.maara("rekonstrueeritud", e.rekonstrueeritud, src)
+        hoiatused.append(f"Hoonel on hilisem ({e.rekonstrueeritud}) rekonstrueerimise/ümberehituse või muu töö "
+                         "kasutusluba/-teatis – vaata EHR-ist, mida tehti, ja arvesta seda seisukorra hindamisel.")
     o.maara("korruseid", e.korruseid, src)
     o.maara("materjal", e.materjal, src)
     o.maara("lift", e.lift, src)

@@ -52,7 +52,8 @@ class Objekt:
     hooneosa: Optional[str] = None
     lift: Optional[bool] = None
     pind_m2: Optional[float] = None          # korteri/hoone üldpind või netopind
-    ehitusaasta: Optional[int] = None
+    ehitusaasta: Optional[int] = None         # kasutusloa aasta → ehitusloa aasta → esmane kasutuselevõtt
+    rekonstrueeritud: Optional[int] = None
     korruseid: Optional[int] = None
     korrus: Optional[int] = None
     tube: Optional[int] = None
