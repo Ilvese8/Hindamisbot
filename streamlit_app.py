@@ -36,7 +36,8 @@ def bränd_html() -> str:
         märk = f'<span class="nimi">{BRÄND}</span>'
     return f'<div class="topbar">{märk}</div>'
 
-st.set_page_config(page_title="Estateguru", page_icon="🏡",
+_FAVICON = Path(__file__).parent / "assets" / "favicon.png"
+st.set_page_config(page_title="Estateguru", page_icon=str(_FAVICON) if _FAVICON.exists() else "🏡",
                    layout="centered", initial_sidebar_state="collapsed")
 
 # ------------------------------------------------------------------ kujundus
