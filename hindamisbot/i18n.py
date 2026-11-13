@@ -15,6 +15,7 @@ KEELED = {"et": "Eesti", "en": "English"}
 _T = {
     # --- veebiliides
     "pealkiri": ("Sinu kinnisvara turuväärtus", "Your property's market value"),
+    "alanimi": ("Hindamisbot – sisekoolitus", "Valuation bot – internal training"),
     "sissejuhatus": ("Vali aadress. Kogume kinnistu andmed maakatastrist ja ehitisregistrist, võrdleme neid "
                      "piirkonna tehingutega ning joonistame sinu krundi plaani.",
                      "Pick an address. We gather the property's data from the land cadastre and the Building Register, "

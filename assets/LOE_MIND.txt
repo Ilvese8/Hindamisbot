@@ -1,0 +1,2 @@
+Pane siia ettevõtte ametlik logo nimega logo.svg (eelistatud) või logo.png.
+Kui fail on olemas, kuvatakse see päises nime asemel. Soovitatav kõrgus ~28 px, hele (valge) versioon tumedale taustale.

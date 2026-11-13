@@ -20,8 +20,24 @@ from hindamisbot.mudel import Objekt, ObjektiTyyp, Seisukord
 from hindamisbot.seadistused import lae
 
 MAX_HINNANGUID_TUNNIS = 20          # ühe brauserisessiooni piirang – kaitseb avalikke liideseid
+BRÄND = "Estateguru"                # ettevõtte nimi päises
+LOGO = [Path(__file__).parent / "assets" / f for f in ("logo.svg", "logo.png")]  # ametlik logo, kui lisatud
 
-st.set_page_config(page_title="Sinu kinnisvara turuväärtus · Your property's market value", page_icon="🏡",
+
+def bränd_html() -> str:
+    """Ettevõtte logo (assets/logo.svg|png), kui see on lisatud; muidu nimi tekstina."""
+    import base64
+    fail = next((f for f in LOGO if f.exists()), None)
+    if fail:
+        mime = "image/svg+xml" if fail.suffix == ".svg" else "image/png"
+        märk = (f'<img src="data:{mime};base64,{base64.b64encode(fail.read_bytes()).decode()}" '
+                f'alt="{BRÄND}" style="height:28px; width:auto; display:block">')
+    else:
+        märk = f'<span class="nimi">{BRÄND}</span>'
+    return (f'<div class="topbar">{märk}<span class="alanimi">{i18n.T("alanimi", st.session_state.get("keel", "et"))}'
+            f'</span></div>')
+
+st.set_page_config(page_title="Estateguru – hindamisbot", page_icon="🏡",
                    layout="centered", initial_sidebar_state="collapsed")
 
 # ------------------------------------------------------------------ kujundus
@@ -41,8 +57,9 @@ html, body, [data-testid="stAppViewContainer"]{
 .block-container{padding-top:1.1rem; max-width:1080px;}
 :focus-visible{outline:2px solid var(--lime)!important; outline-offset:2px;}
 
-.topbar{display:flex; align-items:center; gap:.6rem; color:#fff; font-weight:700; font-size:1.08rem;}
-.topbar svg{width:28px; height:28px}
+.topbar{display:flex; align-items:baseline; gap:.75rem; color:#fff; flex-wrap:wrap;}
+.topbar .nimi{font-weight:800; font-size:1.35rem; letter-spacing:-.02em;}
+.topbar .alanimi{color:#9FB2C4; font-size:.86rem; font-weight:500; padding-left:.75rem; border-left:1px solid rgba(255,255,255,.25);}
 [data-testid="stButtonGroup"] button{border-radius:8px!important; border:1px solid rgba(255,255,255,.35)!important;
   background:transparent!important; color:#fff!important; font-weight:600; min-width:2.8rem;}
 [data-testid="stButtonGroup"] button[aria-checked="true"]{background:#fff!important; color:var(--navy)!important;
@@ -126,10 +143,7 @@ if "keel" not in st.session_state:
 
 vasak, parem = st.columns([5, 1.3], vertical_alignment="center")
 with vasak:
-    st.markdown("""<div class="topbar"><svg viewBox="0 0 30 30" aria-hidden="true">
-      <path d="M4 22 L9 6 L25 9 L22 25 Z" fill="rgba(215,255,110,.12)" stroke="#D7FF6E" stroke-width="2" stroke-linejoin="round"/>
-      <rect x="11" y="12" width="8" height="7" fill="#F2F7FB"/></svg>
-      <span>Hindamisbot</span></div>""", unsafe_allow_html=True)
+    st.markdown(bränd_html(), unsafe_allow_html=True)
 with parem:
     valik = st.segmented_control("Keel / Language", ["ET", "EN"], default=st.session_state.keel.upper(),
                                  key="keelevalik", label_visibility="collapsed")
