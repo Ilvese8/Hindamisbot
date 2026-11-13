@@ -101,6 +101,8 @@ _T = {
     "ar_kategooria": ("Kategooria", "Category"),
     "ar_kaugus": ("Kaugus", "Distance"),
     "ar_meetodid": ("Meetodid", "Methods"),
+    "turu_kontekst": ("Turu kontekst (turuülevaated)", "Market context (market reports)"),
+    "näitaja": ("Näitaja", "Indicator"),
     "ar_tulemus": ("Tulemus: **{v}** ({m2}/m²), vahemik {a} – {b}, usaldus {u:.2f}, kaal lepitamisel {k:.0%}.",
                    "Result: **{v}** ({m2}/m²), range {a} – {b}, confidence {u:.2f}, reconciliation weight {k:.0%}."),
     "ar_tulemus_docx": ("Tulemus {v} ({m2}/m²), vahemik {a} – {b}, usaldus {u:.2f}, kaal {k:.0%}.",
@@ -210,6 +212,9 @@ _TASE = {"asumi": "district", "omavalitsuse": "municipality", "maakonna": "count
 
 # Dünaamilised laused: (muster, asendus). Rühmad säilitavad numbrid ja nimed.
 _MUSTRID = [
+    (r"^\[turg\] Turuülevaadete kontroll: hinnang (.+) €/m² erineb piirkonna võrdlustasemest (.+) €/m² (\S+) – .*$",
+     lambda m: f"[market] Market report check: the estimate {m[1]} €/m² differs from the local reference level "
+               f"{m[2]} €/m² by {m[3]} – check condition, year built and the comparison group."),
     (r"^Võrdlusgrupp: (.+?) – (.+?), (\S+), (\d+) ostu-müügitehingut, mediaan (.+?) €/m² \((.+?)\)\. "
      r"Allikas: Maa- ja Ruumiamet, tehingute andmebaas \((.+?)\)\.$",
      lambda m: f"Comparison group: {_grupp(m[1])} – {m[2]}, {m[3]}, {m[4]} sale transactions, median {m[5]} €/m² "

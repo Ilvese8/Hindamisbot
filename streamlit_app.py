@@ -383,6 +383,12 @@ if h:
                                                 T("tegur"): round(k.tegur, 3),
                                                 T("põhjendus"): i18n.väärtus(k.põhjendus, K)}
                                                for k in t.korrektsioonid]), hide_index=True, width="stretch")
+    tk = (h.turg or {}).get(K)
+    if tk and not tk.tyhi:
+        with st.expander(T("turu_kontekst"), expanded=bool(tk.hoiatus)):
+            st.markdown("\n".join(f"- **{e(r.silt)}:** {e(r.väärtus)} — "
+                                   + (f"[{e(r.allikas)}]({r.url})" if r.url else f"_{e(r.allikas)}_")
+                                   for r in tk.read))
     if h.hoiatused:
         with st.expander(f"{T('hoiatused')} ({len(h.hoiatused)})", expanded=not h.turuväärtus):
             for x in h.hoiatused:

@@ -13,6 +13,7 @@ from .lepitamine import lepita
 from .meetodid import kulu_meetod, statistika_meetod, vordlus_meetod
 from .mudel import Hinnang, Objekt
 from .tuvastus import tuvasta
+from .turuulevaated import Turuulevaated
 
 
 class Hindaja:
@@ -31,6 +32,8 @@ class Hindaja:
         self.ehr_api = None if vorguta else ehr_api.EhrApi(self.klient, s)
         self.kataster = None if vorguta else kataster.Kataster(self.klient, s)
         self.vordlus = lae_vordlus(s.fail("vordlusobjektid"))
+        tu = s.get("andmefailid", {}).get("turuulevaated")
+        self.turg = Turuulevaated(s.fail("turuulevaated") if tu else None)
         self.logi: list[str] = []
 
     def kogu(self, o: Objekt, korter: str | None = None, kuupäev: date | None = None) -> list[str]:
@@ -154,4 +157,10 @@ class Hindaja:
             self.logi += self.stat.api.logi
             self.stat.api.logi = []
         h.hoiatused = [f"[andmed] {x}" for x in kogumise_hoiatused] + h.hoiatused
+        if self.turg.olemas:
+            pind = o.krundi_pind_m2 if o.tyyp.value == "maa" else o.pind_m2
+            eur_m2 = h.turuväärtus / pind if h.turuväärtus and pind else None
+            h.turg = {keel: self.turg.kontekst(o, eur_m2, keel) for keel in ("et", "en")}
+            if h.turg["et"].hoiatus:
+                h.hoiatused.append(f"[turg] {h.turg['et'].hoiatus}")
         return h

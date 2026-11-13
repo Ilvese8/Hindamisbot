@@ -126,3 +126,4 @@ class Hinnang:
     vahemik: Optional[tuple]
     kaalud: dict
     hoiatused: list = field(default_factory=list)
+    turg: dict = field(default_factory=dict)   # keel -> turuulevaated.TuruKontekst

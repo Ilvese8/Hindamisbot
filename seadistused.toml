@@ -27,6 +27,8 @@ hinnastatistika = "andmed/hinnastatistika.csv"
 hinnaindeks = "andmed/hinnaindeks.csv"
 # Ehitisregistri avaandmete väljavõte (CSV). Valikuline – kui puudub, kasutatakse käsitsi sisendit.
 ehitisregister = "andmed/ehitisregister.csv"
+# Infopank: avalike turuülevaadete näitajad (tools/ehita_turuulevaated.py). Valikuline.
+turuulevaated = "andmed/turuulevaated.csv"
 # Hindaja käsitsi kogutud võrdlusobjektid (CSV). Valikuline.
 vordlusobjektid = "andmed/vordlusobjektid.csv"
 

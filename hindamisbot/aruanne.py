@@ -87,6 +87,11 @@ def markdown(h: Hinnang, keel: str = "et") -> str:
                          f"{r['eur_m2']} | {i18n.vo_korrektsioonid(r['korrektsioonid'], keel)} | {r['korr_eur_m2']} | "
                          f"{r['allikas']} |")
         L.append("")
+    tk = (h.turg or {}).get(keel)
+    if tk and not tk.tyhi:
+        L += [f"## {T('turu_kontekst')}", "", f"| {T('näitaja')} | {T('väärtus')} | {T('allikas')} |", "|---|---|---|"]
+        L += [f"| {r.silt} | {r.väärtus} | {f'[{r.allikas}]({r.url})' if r.url else r.allikas} |" for r in tk.read]
+        L.append("")
     if h.hoiatused:
         L += [f"## {T('hoiatused')}", ""] + [f"- {tr(x)}" for x in h.hoiatused] + [""]
     L += [f"## {T('ar_kontroll')}", ""] + [f"- [ ] {x}" for x in i18n.kontroll(keel)]
@@ -160,6 +165,10 @@ def docx(h: Hinnang, tee: Path, keel: str = "et") -> Path:
                   [[r["aadress"], r["kaugus_m"], r["kuupäev"], i18n.väärtus(r["liik"], keel), f"{r['pind_m2']:.0f}",
                     eur(r["hind"]), r["eur_m2"], i18n.vo_korrektsioonid(r["korrektsioonid"], keel), r["korr_eur_m2"]]
                    for r in vo])
+    tk = (h.turg or {}).get(keel)
+    if tk and not tk.tyhi:
+        d.add_heading(T("turu_kontekst"), 1)
+        tabel([T("näitaja"), T("väärtus"), T("allikas")], [[r.silt, r.väärtus, r.allikas] for r in tk.read])
     if h.hoiatused:
         d.add_heading(T("hoiatused"), 1)
         for x in h.hoiatused:

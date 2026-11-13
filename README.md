@@ -72,6 +72,7 @@ Tuvastatud tüüp ja põhjendus on aruandes kirjas. Vestlusbot küsib kinnitust 
 | Hinnaindeks (Maa- ja Ruumiamet) | kvartaalne indeks hindade ajakorrektsiooniks | CSV → `andmed/hinnaindeks.csv` | `allikad/hinnastatistika.py` |
 | Maakataster (Maa- ja Ruumiamet, WFS) | krundi pindala, sihtotstarve(d), omandivorm, kinnistu number, maa maksustamishind, katastri märked | **automaatne**, avalik WFS `gsavalik.envir.ee/geoserver/kataster` (sama andmestik mis X-GIS-is) | `allikad/kataster.py` |
 | OpenStreetMap (Overpass) | kaugus ühistranspordi, kooli, poe ja veekoguni | avalik API, automaatne | `allikad/osm.py` |
+| **Infopank: turuülevaated** | Maa- ja Ruumiameti aastaülevaate (2025) hinnatasemed maakonna, asula, Tallinna/Tartu/Pärnu linnaosa ja Tallinna asumi kaupa; hinnaindeksid kuni 2026 III; Uus Maa, 1Partneri ja Pindi kuuülevaated; Newsec/Colliers/Inreal büroo-, kaubandus- ja laopindade vakants, üürid ja tootlused | `tools/ehita_turuulevaated.py` → `andmed/turuulevaated.csv` (ainult arvud + allikas, periood ja link) | `turuulevaated.py` |
 | Hindaja võrdlusobjektid | tehingud või käsitsi üle vaadatud pakkumised | käsitsi täidetud CSV → `andmed/vordlusobjektid.csv` | `allikad/vordlusobjektid.py` |
 
 Failide veerunimed vastendatakse paindlikult (vt `ALIASED` iga mooduli alguses), seega sobivad ka
@@ -80,6 +81,15 @@ veidi erineva päisega väljavõtted. Näidisfailid veergude kujuga on kaustas `
 
 Võrdlusobjektide failis on veerg `allika_tyyp`: tehingu korral `tehing`, kuulutuse korral `pakkumine`.
 Pakkumishinda korrigeeritakse tegur `vordlus.pakkumise_korrektsioon` abil.
+
+### Turu kontekst ja usutavuskontroll
+
+Iga hinnangu juurde lisatakse **Turu kontekst**: piirkonna hinnatase kõige täpsemast olemasolevast
+piirkonnast (asum → linnaosa → asula → maakond → Eesti), kinnisvarafirmade värskeim kuuülevaade ja
+korteriindeksi aastamuutus. Korteri puhul arvutatakse **võrdlustase täna** = aastaülevaate mediaan ×
+(viimane korteriindeks / aastaülevaate aasta keskmine indeks). Kui hinnangu €/m² erineb sellest üle 25%,
+lisatakse hoiatus `[turg]`. Uue ülevaate lisamiseks täienda tabeleid failis `tools/ehita_turuulevaated.py`
+ja käivita `python tools/ehita_turuulevaated.py`.
 
 ## Mida bot ei kogu: omanik ja koormatised
 
