@@ -52,6 +52,13 @@ _T = {
     "pind": ("Pind m²", "Area m²"),
     "krunt": ("Krundi pind m²", "Plot area m²"),
     "ehitusaasta": ("Ehitusaasta", "Year built"),
+    "ehitusaasta_abi": ("Täida, kui ehitisregistris ehitusaasta puudub või on vale. Sisestatud aastat kasutatakse "
+                        "võrdlusgrupi (ehitusperioodi), vanuse korrektsiooni ja kulumi arvutamisel.",
+                        "Fill in if the Building Register has no or a wrong year. The year is used for the comparison "
+                        "group (construction period), the age adjustment and depreciation."),
+    "registrist": ("registrist", "from register"),
+    "aasta_puudus": ("Ehitisregistris ehitusaastat polnud – sisesta see allpool ja vajuta uuesti **Hinda**.",
+                     "The Building Register had no year built – enter it below and press **Estimate** again."),
     "korrus": ("Korrus", "Floor"),
     "energiaklass": ("Energiaklass", "Energy class"),
     "hinda": ("Hinda", "Estimate"),
@@ -247,8 +254,12 @@ _MUSTRID = [
     (r"^\[(andmed|statistika|võrdlus|kulu)\] (.+)$",
      lambda m: f"[{ {'andmed': 'data', 'statistika': 'statistics', 'võrdlus': 'comparison', 'kulu': 'cost'}[m[1]] }] "
                f"{tõlgi(m[2], 'en')}"),
-    (r"^Ehitusaasta pole teada – hinnang ei arvesta hoone vanust\.$",
-     lambda m: "Year built is unknown – the estimate does not account for the building's age."),
+    (r"^Ehitisregistris ehitusaasta puudub – sisesta see väljale „Täpsusta“, siis arvestatakse ehitusperioodi ja kulumit\.$",
+     lambda m: "The Building Register has no year built – enter it under “Refine” so the construction period and "
+               "depreciation are taken into account."),
+    (r"^Ehitusaasta pole teada – hinnang ei arvesta hoone vanust\.(?: Lisa ehitusaasta väljale „Täpsusta“\.)?$",
+     lambda m: "Year built is unknown – the estimate does not account for the building's age. "
+               "Enter the year under “Refine”."),
     (r"^Ehitusaasta puudub – kulum eeldatud 30%\.$", lambda m: "Year built missing – depreciation assumed at 30%."),
     (r"^Hinnastatistika fail puudub – meetodit ei rakendatud\.$", lambda m: "Price statistics file missing – method not applied."),
     (r"^In-ADS ei leidnud aadressi – kontrolli kirjapilti\.$", lambda m: "In-ADS did not find the address – check the spelling."),

@@ -269,11 +269,17 @@ with st.container(border=True, key="vorm"):
     seisukorrad = [None] + list(Seisukord)
     seisukord = c2.selectbox(T("seisukord"), seisukorrad,
                              format_func=lambda x: T("teadmata") if x is None else i18n.väärtus(x.value, K))
-    with st.expander(T("täpsusta")):
+    eelmine = st.session_state.get("hinnang")
+    aasta_puudus = bool(eelmine and eelmine.objekt.tyyp and eelmine.objekt.tyyp.value != "maa"
+                        and not eelmine.objekt.ehitusaasta)
+    with st.expander(T("täpsusta"), expanded=aasta_puudus):
+        if aasta_puudus:
+            st.info(T("aasta_puudus"))
         d1, d2, d3 = st.columns(3)
-        pind = d1.number_input(T("pind"), min_value=0.0, value=0.0, step=1.0)
-        krunt = d2.number_input(T("krunt"), min_value=0.0, value=0.0, step=10.0)
-        aasta = d3.number_input(T("ehitusaasta"), min_value=0, max_value=date.today().year + 3, value=0)
+        pind = d1.number_input(T("pind"), min_value=0.0, value=None, step=1.0, placeholder=T("registrist"))
+        krunt = d2.number_input(T("krunt"), min_value=0.0, value=None, step=10.0, placeholder=T("registrist"))
+        aasta = d3.number_input(T("ehitusaasta"), min_value=1700, max_value=date.today().year + 3, value=None,
+                                step=1, placeholder=T("registrist"), help=T("ehitusaasta_abi"))
         e1, e2 = st.columns(2)
         korrus = e1.number_input(T("korrus"), min_value=0, max_value=60, value=0)
         energia = e2.selectbox(T("energiaklass"), [None, *"ABCDEFGH"],
@@ -300,7 +306,7 @@ if saada and g:
         o.maara("ehr_kood", g["hooned"][0]["ehr_kood"], "In-ADS")
     if g["katastritunnus"]:
         o.maara("katastritunnus", g["katastritunnus"], "In-ADS")
-    for väli, v in (("pind_m2", pind), ("krundi_pind_m2", krunt), ("ehitusaasta", int(aasta)),
+    for väli, v in (("pind_m2", pind), ("krundi_pind_m2", krunt), ("ehitusaasta", int(aasta) if aasta else None),
                     ("korrus", int(korrus))):
         if v:
             o.maara(väli, v, "sisend")

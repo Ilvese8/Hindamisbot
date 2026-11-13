@@ -96,7 +96,7 @@ def statistika_meetod(o: Objekt, stat, indeks: Hinnaindeks, s, kuupäev: date) -
             if grupp_ehitusaasta_järgi else
             f"ehitusaasta {o.ehitusaasta}: arvestatud ehitusperioodi korrektsiooniga")
     elif o.tyyp.value != "maa":
-        t.hoiatused.append("Ehitusaasta pole teada – hinnang ei arvesta hoone vanust.")
+        t.hoiatused.append("Ehitusaasta pole teada – hinnang ei arvesta hoone vanust. Lisa ehitusaasta väljale „Täpsusta“.")
     eur_m2 = baas * kr.korruta(t.korrektsioonid)
     t.eur_m2 = eur_m2
     t.väärtus = eur_m2 * pind

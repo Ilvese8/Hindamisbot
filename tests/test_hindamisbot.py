@@ -9,6 +9,7 @@ from hindamisbot.allikad import inads, osm
 from hindamisbot.allikad.ehr import Ehitisregister
 from hindamisbot.allikad.hinnastatistika import Hinnaindeks, Hinnastatistika, kvartal, pinnavahemik
 from hindamisbot.allikad.koordinaadid import kaugus_m, lest97_wgs84
+from hindamisbot import i18n
 from hindamisbot.hindaja import Hindaja
 from hindamisbot.lepitamine import lepita, ümarda
 from hindamisbot.mudel import MeetodiTulemus, Objekt, ObjektiTyyp, Seisukord
@@ -583,3 +584,21 @@ def test_rikasta_ehitusaasta_allikas_ja_rekonstrueerimine():
     h = ehr_api.rikasta(o, e, e.leia_osa("17"), KP)
     assert o.ehitusaasta == 1964 and "esmase kasutuselevõtu" in o.allikad["ehitusaasta"]
     assert o.rekonstrueeritud == 2026 and any("ümberehituse" in x for x in h)
+
+
+def test_kasitsi_ehitusaasta_kasutatakse_kui_registris_puudub(s):
+    hj = Hindaja(s, vorguta=True)
+
+    def uus():
+        return Objekt("Puuduva tn 99-1, Tallinn", ObjektiTyyp.KORTER, maakond="Harju maakond",
+                      omavalitsus="Tallinn", asustusyksus="Mustamäe", pind_m2=51.2, korrus=3, korruseid=5)
+    ilma = hj.hinda(uus(), KP)
+    assert ilma.objekt.ehitusaasta is None
+    teade = next(x for x in ilma.hoiatused if "ehitusaasta puudub" in x)
+    assert "Refine" in i18n.tõlgi(teade, "en")
+    o = uus()
+    o.maara("ehitusaasta", 2015, "sisend")
+    h = hj.hinda(o, KP)
+    assert not any("ehitusaasta puudub" in x for x in h.hoiatused)
+    assert any(t.andmed.get("ehitusaasta_allikas") == "sisend" for t in h.tulemused)
+    assert h.turuväärtus != ilma.turuväärtus

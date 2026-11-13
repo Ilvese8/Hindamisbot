@@ -156,6 +156,9 @@ class Hindaja:
         if self.stat.api:
             self.logi += self.stat.api.logi
             self.stat.api.logi = []
+        if o.tyyp.value != "maa" and not o.ehitusaasta:
+            kogumise_hoiatused.append("Ehitisregistris ehitusaasta puudub – sisesta see väljale „Täpsusta“, "
+                                      "siis arvestatakse ehitusperioodi ja kulumit.")
         h.hoiatused = [f"[andmed] {x}" for x in kogumise_hoiatused] + h.hoiatused
         if self.turg.olemas:
             pind = o.krundi_pind_m2 if o.tyyp.value == "maa" else o.pind_m2
