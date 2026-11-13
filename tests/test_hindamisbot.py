@@ -252,7 +252,7 @@ def test_terviktoovoog_api_ga(s, monkeypatch):
     o.asustusyksus = "Mustamäe linnaosa"
     hinnang = h.hinda(o, kuupäev=KP)
     stat = next(t for t in hinnang.tulemused if t.meetod == "statistika")
-    assert "statistika.kataster.ee" in stat.selgitus[0]
+    assert "tehingute andmebaas" in stat.selgitus[0] and "1940–1970" in stat.selgitus[0]
     assert 115_000 < stat.väärtus < 135_000          # 2511 €/m² × 51,2 m² × korrektsioonid
     assert 0.06 <= (stat.vahemik[1] / stat.väärtus - 1) <= 0.25
 
@@ -343,7 +343,7 @@ def test_ainult_aadressist_korteri_hinnang(s, tmp_path):
     assert o.pind_m2 == 45.7 and o.ehitusaasta == 1964 and o.korrus == 4 and o.asustusyksus == "Mustamäe linnaosa"
     assert o.kaugused_m["ühistransport"] < 100
     stat = next(t for t in hinnang.tulemused if t.meetod == "statistika")
-    assert "korterid_ehitusaasta / 1940-1970" in stat.selgitus[0]
+    assert "ehitatud 1940–1970" in stat.selgitus[0]
     assert 100_000 < hinnang.turuväärtus < 140_000
 
 
@@ -481,3 +481,59 @@ def test_kasutaja_tyyp_on_ulimuslik(s, tmp_path):
     o = Objekt("Männi tee 3, Viimsi", ObjektiTyyp.ARIPIND)
     _hindaja(s, tmp_path, EramuKlient()).kogu(o, kuupäev=KP)
     assert o.tyyp == ObjektiTyyp.ARIPIND and o.tyyp_pohjendus is None
+
+
+# ---------------------------------------------------------------- mitu hoonet samal aadressil + aadressisoovitused
+HEKI = json.loads((FDIR / "inads_heki6.json").read_text(encoding="utf-8"))
+
+
+class HekiKlient:
+    def __init__(self):
+        self.params = []
+
+    def json(self, url, params=None, **_):
+        self.params.append(params)
+        return HEKI
+
+
+def test_otsi_valib_hoone_kuhu_korter_kuulub():
+    k = HekiKlient()
+    kirje = inads.otsi(k, "https://inads", "Heki tee 6, Haabneeme", "68")
+    assert kirje["tunnus"] == "120310725" and k.params[0]["results"] == 10
+    assert inads.otsi(k, "https://inads", "Heki tee 6, Haabneeme", "1")["tunnus"] == "120310708"
+
+
+def test_rikasta_heki_korter_68():
+    o = Objekt("Heki tee 6-68, Haabneeme", hooneosa_nr="68")
+    inads.rikasta(o, inads.otsi(HekiKlient(), "u", "Heki tee 6, Haabneeme", "68"))
+    assert o.ehr_kood == "120310725" and o.osa_ehr_kood == "120310725-2546400"
+
+
+def test_soovitused_liidavad_hooned_ja_katastri():
+    s_ = inads.soovitused(HekiKlient(), "u", "Heki tee 6")
+    assert len(s_) == 1
+    g = s_[0]
+    assert g["aadress"].endswith("Heki tee 6") and g["katastritunnus"] == "89001:010:1841"
+    assert [h["ehr_kood"] for h in g["hooned"]] == ["120310708", "120310725"]
+    assert ("68", "120310725-2546400") in g["hooned"][1]["osad"]
+    assert inads.soovitused(HekiKlient(), "u", "He") == []
+
+
+def test_osa_sort():
+    assert sorted(["10", "2", "10A", "1"], key=inads.osa_sort) == ["1", "2", "10", "10A"]
+
+
+def test_ehitusaasta_arvestus(s):
+    # ehitusperioodi grupp → korrektsiooni ei lisata, aga see on kirjas
+    api = KatasterStatistika(FakeKlient(), s)
+    h = Hindaja(s, vorguta=True)
+    h.stat = StatAllikas(api, h.stat.fail)
+    o = korter(); o.asustusyksus = "Mustamäe linnaosa"
+    t = next(x for x in h.hinda(o, kuupäev=KP).tulemused if x.meetod == "statistika")
+    assert "1940–1970" in t.andmed["võrdlusgrupp"] and "sama ehitusperioodi" in t.andmed["ehitusaasta_arvestus"]
+    assert not any(k.nimi == "Ehitusperiood" for k in t.korrektsioonid)
+    # pinnavahemiku grupp (ehitusperioodi lahter peidetud) → ehitusaasta läheb korrektsiooniks
+    o2 = korter(); o2.asustusyksus = "Mustamäe linnaosa"; o2.ehitusaasta = 1995
+    t2 = next(x for x in h.hinda(o2, kuupäev=KP).tulemused if x.meetod == "statistika")
+    assert "kõik ehitusaastad" in t2.andmed["võrdlusgrupp"]
+    assert any(k.nimi == "Ehitusperiood" for k in t2.korrektsioonid)

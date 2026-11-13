@@ -57,6 +57,12 @@ class Hindaja:
             except ConnectionError as e:
                 hoiatused.append(f"In-ADS pole kättesaadav: {e}")
 
+        # Hooneosa kood algab hoone EHR-koodiga – kui need ei klapi, kuulub osa teise hoonesse
+        if o.osa_ehr_kood and "-" in o.osa_ehr_kood:
+            hoone = o.osa_ehr_kood.split("-")[0]
+            if o.ehr_kood != hoone:
+                o.maara("ehr_kood", hoone, "In-ADS (hooneosa)", kirjuta_yle=True)
+
         # 2. Ehitis (ka siis, kui tüüp on veel teadmata)
         e = osa = None
         ehr_kirje = None

@@ -13,6 +13,21 @@ from .mudel import Korrektsioon, MeetodiTulemus, Objekt, Seisukord
 TASE = {"asustusyksus": "asumi", "omavalitsus": "omavalitsuse", "maakond": "maakonna"}
 
 
+_GRUPP = {
+    "korterid_ehitusaasta": "korterid majades, mis on ehitatud {nimi}",
+    "korteriomand": "korterid pinnaga {nimi} m² (kõik ehitusaastad)",
+    "eluhooned_ehitusaasta": "elamud, mis on ehitatud {nimi}",
+    "ehitise_liik": "elamud (kõik ehitusaastad)",
+    "hoonestamata_maa": "hoonestamata maa, sihtotstarve {nimi_v}",
+    "hoonestatud_maa": "hoonestatud maa, sihtotstarve {nimi_v}",
+}
+
+
+def võrdlusgrupp(liik, nimi) -> str:
+    mall = _GRUPP.get(str(liik), "{nimi}")
+    return mall.format(nimi=str(nimi).replace("-", "–"), nimi_v=str(nimi).lower())
+
+
 def n(x: float) -> str:
     """1234.5 -> '1 235'"""
     return f"{x:,.0f}".replace(",", " ")
@@ -51,9 +66,11 @@ def statistika_meetod(o: Objekt, stat, indeks: Hinnaindeks, s, kuupäev: date) -
 
     baas = r.eur_m2
     if r.allikas == "api":
-        t.selgitus.append(f"Maa- ja Ruumiameti tehingute andmebaas (statistika.kataster.ee), ainult ost-müük: "
-                          f"{rida.get('liik')} / {rida.get('nimi')} / {rida.get('piirkond')}, {r.perioodid[0]}, "
-                          f"{r.tehinguid} tehingut, mediaan {n(baas)} €/m² ({alus}).")
+        grupp = võrdlusgrupp(rida.get("liik"), rida.get("nimi"))
+        t.andmed["võrdlusgrupp"] = f"{grupp}, {rida.get('piirkond')}, {r.perioodid[0]}"
+        t.selgitus.append(f"Võrdlusgrupp: {grupp} – {rida.get('piirkond')}, {r.perioodid[0]}, "
+                          f"{r.tehinguid} ostu-müügitehingut, mediaan {n(baas)} €/m² ({alus}). "
+                          f"Allikas: Maa- ja Ruumiamet, tehingute andmebaas ({rida.get('liik')}).")
     else:
         t.selgitus.append(f"Maa- ja Ruumiameti hinnastatistika ({TASE[r.tase]} tasemel, {r.tehinguid} tehingut, "
                           f"perioodid {', '.join(r.perioodid)}): {n(baas)} €/m².")
@@ -63,8 +80,19 @@ def statistika_meetod(o: Objekt, stat, indeks: Hinnaindeks, s, kuupäev: date) -
         tegur = indeks.tegur(alg, kv)
         if tegur and abs(tegur - 1) > 1e-6:
             t.korrektsioonid.append(Korrektsioon("Aeg (hinnaindeks)", tegur, f"{alg[0]} Q{alg[1]} → {kv[0]} Q{kv[1]}"))
-    t.korrektsioonid += kr.objekti_korrektsioonid(
-        s, o, ehitusperiood=s.get_path("statistika.rakenda_ehitusperioodi", False))
+    # Kui võrdlusgrupp on juba sama ehitusperioodi tehingud, ei korrigeerita ehitusaasta järgi uuesti.
+    # Kui grupp hõlmab kõiki ehitusaastaid (nt pinnavahemiku statistika), arvestatakse ehitusaastat korrektsiooniga.
+    grupp_ehitusaasta_järgi = str(rida.get("liik", "")).endswith("_ehitusaasta")
+    rakenda_aasta = s.get_path("statistika.rakenda_ehitusperioodi", False) or \
+        (bool(o.ehitusaasta) and not grupp_ehitusaasta_järgi)
+    t.korrektsioonid += kr.objekti_korrektsioonid(s, o, ehitusperiood=rakenda_aasta)
+    if o.ehitusaasta and o.tyyp.value != "maa":
+        t.andmed["ehitusaasta_arvestus"] = (
+            f"ehitusaasta {o.ehitusaasta}: võrreldi sama ehitusperioodi ({rida.get('nimi')}) tehingutega"
+            if grupp_ehitusaasta_järgi else
+            f"ehitusaasta {o.ehitusaasta}: arvestatud ehitusperioodi korrektsiooniga")
+    elif o.tyyp.value != "maa":
+        t.hoiatused.append("Ehitusaasta pole teada – hinnang ei arvesta hoone vanust.")
     eur_m2 = baas * kr.korruta(t.korrektsioonid)
     t.eur_m2 = eur_m2
     t.väärtus = eur_m2 * pind

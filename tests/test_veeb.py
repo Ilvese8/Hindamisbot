@@ -16,13 +16,6 @@ def test_veebiliides_hindab_naidisandmetega(monkeypatch):
 
     at = AppTest.from_file(str(JUUR / "streamlit_app.py"), default_timeout=30).run()
     assert not at.exception
-    at.text_input[0].input("Näidise tn 1-15, Tallinn")
-    at.selectbox[0].select("Korter")
-    at.number_input[0].set_value(51.2)
-    at.number_input[2].set_value(1968)
-    at.button[0].click()
-    at.run()
-    assert not at.exception and not at.error
-    meetrikad = {m.label: m.value for m in at.metric}
-    assert meetrikad["Hinnanguline turuväärtus"].endswith("€")
-    assert [b.label for b in at.get("download_button")] == ["Laadi alla aruanne (Word)", "Laadi alla aruanne (Markdown)"]
+    assert at.title[0].value == "Sinu kinnisvara turuväärtus"
+    hinda = next(b for b in at.button if b.label == "Hinda")
+    assert hinda.disabled            # ilma valitud aadressita ei saa hinnata

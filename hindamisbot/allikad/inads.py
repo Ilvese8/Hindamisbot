@@ -6,6 +6,8 @@ Vastuse väljanimed võivad versiooniti muutuda, seepärast loetakse neid mitme 
 """
 from __future__ import annotations
 
+import re
+
 from ..mudel import Objekt
 from .http import Klient
 from .koordinaadid import lest97_wgs84
@@ -27,13 +29,58 @@ def _float(v):
         return None
 
 
+def _on_osa(kirje: dict, korter: str) -> bool:
+    return any(str(k.get("tahis", "")).lower() == str(korter).lower() for k in kirje.get("appartments") or [])
+
+
 def otsi(klient: Klient, url: str, aadress: str, korter: str | None = None, features: str = FEATURES) -> dict | None:
-    params = {"address": aadress, "results": 1, "features": features, "seosreg": 1, "ehr2": 1}
+    """Parim vaste. Hooneosa korral eelistatakse hoonet, kuhu see osa kuulub – samal aadressil võib olla
+    mitu hoonet (nt Heki tee 6, Haabneeme: korterid 1–57 ühes, 58–… teises hoones)."""
+    params = {"address": aadress, "results": 10 if korter else 1, "features": features, "seosreg": 1, "ehr2": 1}
     if korter:
         params["appartment"] = korter
     vastus = klient.json(url, params=params)
     aadressid = vastus.get("addresses") or []
+    if korter:
+        sobiv = next((a for a in aadressid if _on_osa(a, korter)), None)
+        if sobiv:
+            return sobiv
     return aadressid[0] if aadressid else None
+
+
+def soovitused(klient: Klient, url: str, tekst: str, n: int = 10) -> list[dict]:
+    """Aadressisoovitused trükkimise ajal. Sama aadressiga hooned ja katastriüksus liidetakse üheks valikuks.
+
+    Tagastab: [{"aadress", "lühiaadress", "hooned": [{"ehr_kood", "osad": [(tähis, osa_kood)]}],
+               "katastritunnus", "lat", "lon"}]
+    """
+    tekst = (tekst or "").strip()
+    if len(tekst) < 3:
+        return []
+    otsitav, _ = eralda_hooneosa(tekst)
+    vastus = klient.json(url, params={"address": otsitav, "results": n, "features": "EHITISHOONE,KATASTRIYKSUS",
+                                      "seosreg": 1, "ehr2": 1})
+    grupid: dict[str, dict] = {}
+    for a in vastus.get("addresses") or []:
+        aadr = _esimene(a, "pikkaadress", "taisaadress")
+        if not aadr:
+            continue
+        g = grupid.setdefault(aadr, {"aadress": aadr, "lühiaadress": _esimene(a, "ipikkaadress", "aadresstekst") or aadr,
+                                     "hooned": [], "katastritunnus": None,
+                                     "lat": _float(a.get("viitepunkt_b")), "lon": _float(a.get("viitepunkt_l"))})
+        liik = str(a.get("liikVal") or "").upper()
+        if "EHITIS" in liik and a.get("tunnus"):
+            osad = [(str(k.get("tahis")), k.get("tunnus")) for k in a.get("appartments") or [] if k.get("tahis")]
+            g["hooned"].append({"ehr_kood": str(a["tunnus"]), "osad": osad})
+        elif "KATASTR" in liik:
+            g["katastritunnus"] = a.get("tunnus")
+    return list(grupid.values())
+
+
+def osa_sort(tähis: str):
+    """Korterite loomulik järjestus: 2 < 10 < 10A."""
+    m = re.match(r"(\d+)(.*)", tähis)
+    return (int(m.group(1)), m.group(2)) if m else (10**9, tähis)
 
 
 def rikasta(objekt: Objekt, kirje: dict) -> list[str]:
