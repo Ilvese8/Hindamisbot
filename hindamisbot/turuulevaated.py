@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import csv
 import re
+from datetime import date
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -24,6 +25,7 @@ _SILDID = {
     "elamumaa": ("Elamumaa mediaanhind {p} ({per})", "Residential land median {p} ({per})"),
     "haritav": ("Haritava maa mediaanhind {p} ({per})", "Arable land median {p} ({per})"),
     "mets": ("Metsamaa mediaanhind {p} ({per})", "Forest land median {p} ({per})"),
+    "uus": ("Uusarendused {p}: {n} ({per})", "New developments {p}: {n} ({per})"),
     "indeks": ("Korteriomandite hinnaindeksi muutus aastaga ({per})", "Apartment price index, year on year ({per})"),
     "viide": ("Piirkonna võrdlustase täna (indekseeritud)", "Local reference level today (indexed)"),
     "ari": ("{seg}: {n} ({p}, {per})", "{seg}: {n} ({p}, {per})"),
@@ -204,7 +206,23 @@ class Turuulevaated:
                                        lähe(r), r["url"]))
                 if viimased:
                     break
-            pindi = [r for r in self.read if r["allikas"] == "Pindi Kinnisvara"]
+            uus = [r for r in self.read if r["segment"] == "uusarendus"]
+            on_uus = o.ehitusaasta and o.ehitusaasta >= date.today().year - 3
+            if uus and t == "korter" and (on_uus or o.maakond == "Harju maakond"):
+                N = {"pakkumise_keskmine_eur_m2": ("pakkumiste keskmine", "average asking price"),
+                     "valjamuugi_keskmine_eur_m2": ("väljamüügi keskmine", "average sales price"),
+                     "pakkumisi": ("pakkumisi", "units on offer"), "valmis_muumata": ("valmis, müümata", "completed, unsold")}
+                linnas = o.omavalitsus == "Tallinn"
+                for r in uus:
+                    if r["näitaja"] not in N or (r["piirkond"] == "Tallinn" and not linnas) or \
+                            (r["piirkond"].endswith("v.a Tallinn") and linnas):
+                        continue
+                    if not on_uus and r["näitaja"] in ("pakkumisi", "valmis_muumata"):
+                        continue
+                    ü = "" if r["ühik"] == "tk" else f" {r['ühik']}"
+                    k.read.append(Rida(L("uus", p=r["piirkond"], n=N[r["näitaja"]][1 if keel == "en" else 0],
+                                         per=r["periood"]), f"{_eur(float(r['väärtus']))}{ü}", lähe(r), r["url"]))
+            pindi = [r for r in self.read if r["allikas"] == "Pindi Kinnisvara" and r["segment"] == "korter"]
             if pindi and t == "korter":
                 r = max(pindi, key=lambda r: r["periood"])
                 k.read.append(Rida(L("pindi", per=r["periood"]), f"{_eur(float(r['väärtus']))} €/m²", lähe(r), r["url"]))

@@ -105,3 +105,12 @@ def test_hinnang_ja_aruanne_sisaldavad_konteksti():
     md = aruanne.markdown(h, "et")
     assert "Turu kontekst" in md and "Maa- ja Ruumiamet" in md
     assert "Market context" in aruanne.markdown(h, "en")
+
+
+def test_uusarendus_pindi(tu):
+    o = kor(asustusyksus="Kesklinna linnaosa", ehitusaasta=2025)
+    v = {r.silt: r.väärtus for r in tu.kontekst(o, 4500).read}
+    assert any("Uusarendused Tallinn ja Harjumaa" in s for s in v)
+    assert any("väljamüügi keskmine" in s and "Tallinn" in s for s in v)
+    vana = kor(maakond="Tartu maakond", omavalitsus="Tartu linn", asustusyksus="Tartu linn", ehitusaasta=1975)
+    assert not any("Uusarendused" in r.silt for r in tu.kontekst(vana, 2000).read)

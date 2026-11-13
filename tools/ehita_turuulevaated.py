@@ -340,6 +340,17 @@ Uus Maa|Juuli turuülevaade 2026|2026-10-13|2026-07|Narva linn|mediaan_eur_m2|48
 Pindi Kinnisvara|Pindi indeks|2026-11-01|2026-09|Eesti suuremad linnad|keskmine_eur_m2|2357|€/m²|https://www.pindi.ee/hindamine/|kaalutud keskmine (maakonnakeskused + Narva, Kohtla-Järve); kuuga -2%
 """
 
+# --- Pindi Kinnisvara uusarenduste monitooring (Tallinn + Harjumaa, pakkumised arendusprojektides) ---
+# piirkond | näitaja | väärtus | ühik | väljaanne | kuupäev | periood | url | märkus
+UUSARENDUS = """
+Tallinn ja Harjumaa|projekte|129|tk|Uusarenduste monitooring: tühjade uute korterite jääk tõuseb|2025-09-23|2025-09|https://www.pindi.ee/tuhjade-uute-korterite-jaak-touseb/|müügis olevad korteriarendused
+Tallinn ja Harjumaa|pakkumisi|3238|tk|Uusarenduste monitooring: tühjade uute korterite jääk tõuseb|2025-09-23|2025-09|https://www.pindi.ee/tuhjade-uute-korterite-jaak-touseb/|uued korterid pakkumises
+Tallinn ja Harjumaa|pakkumise_keskmine_eur_m2|4465|€/m²|Uusarenduste monitooring: tühjade uute korterite jääk tõuseb|2025-09-23|2025-09|https://www.pindi.ee/tuhjade-uute-korterite-jaak-touseb/|pakkumishind, mitte tehinguhind
+Tallinn ja Harjumaa|valmis_muumata|1000|tk|Uusarenduste monitooring: tühjade uute korterite jääk tõuseb|2025-09-23|2025-09|https://www.pindi.ee/tuhjade-uute-korterite-jaak-touseb/|ületas taas 1000 ühiku piiri
+Tallinn|valjamuugi_keskmine_eur_m2|4900|€/m²|Postimees: uusarenduste müümata korterite arv kasvab (Pindi)|2025-09-23|2025-09|https://majandus.postimees.ee/8322569/liiga-kallis-uusarenduste-muumata-korterite-arv-kasvab|ligikaudu ("läheneb 4900 eurole")
+Harju maakond v.a Tallinn|pakkumise_keskmine_eur_m2|3500|€/m²|Postimees: uusarenduste müümata korterite arv kasvab (Pindi)|2025-09-23|2025-09|https://majandus.postimees.ee/8322569/liiga-kallis-uusarenduste-muumata-korterite-arv-kasvab|ligikaudu ("veidi üle 3500")
+"""
+
 # --- Ärikinnisvara: piirkond | segment | näitaja | väärtus | ühik | allikas | väljaanne | kuupäev | periood | url | märkus
 ARI = """
 Tallinn|büroo|vakants_kokku|8.7|%|Newsec|Baltic Office Market 2025 Q4|2026-01-31|2025-Q4|https://cdn.sanity.io/files/w1ytoec0/production/796b6fb95a2f6321a1e0f572014f7fa3163269f5.pdf?dl=|
@@ -398,6 +409,8 @@ def ehita(tee: Path) -> int:
     for allikas, väljaanne, kuupäev, periood, p, n, v, u, url, m in _read(FIRMAD):
         tase = "riik" if p in ("Eesti", "Eesti suuremad linnad") else "asula"
         lisa((allikas, väljaanne, kuupäev, periood, url), tase, p, "", "korter", n, v, u, m)
+    for p, n, v, u, väljaanne, kuupäev, periood, url, m in _read(UUSARENDUS):
+        lisa(("Pindi Kinnisvara", väljaanne, kuupäev, periood, url), "piirkond", p, "", "uusarendus", n, v, u, m)
     for p, seg, n, v, u, allikas, väljaanne, kuupäev, periood, url, m in _read(ARI):
         lisa((allikas, väljaanne, kuupäev, periood, url), "asula", p, "", seg, n, v, u, m)
 
