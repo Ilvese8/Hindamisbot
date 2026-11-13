@@ -20,9 +20,8 @@ _T = {
                     "Test version. Automated estimate based on Estonian open data – **not an expert valuation**. "
                     "The result must be reviewed by a certified valuer."),
     "aadress": ("Aadress", "Address"),
-    "aadress_koht": ("Objekti aadress", "Property address"),
-    "aadress_abi": ("Hakka trükkima (nt „Heki tee 6 Haabneeme“) ja vali aadress pakutud valikutest.",
-                    "Start typing (e.g. “Heki tee 6 Haabneeme”) and pick the address from the suggestions."),
+    "aadress_koht": ("Objekti aadress, nt Heki tee 6 Haabneeme", "Property address, e.g. Heki tee 6 Haabneeme"),
+    "aadress_abi": ("Hakka trükkima ja vali pakutud aadress", "Start typing and pick a suggested address"),
     "osa": ("Korter / hooneosa", "Apartment / building unit"),
     "osa_abi": ("Kortermajas vali korteri number. Eramu või terve hoone puhul jäta „Terve hoone / krunt“.",
                 "In an apartment building choose the apartment number. For a house or a whole building keep "

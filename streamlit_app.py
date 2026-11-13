@@ -92,6 +92,10 @@ label, [data-testid="stWidgetLabel"] p{color:var(--pine)!important; font-weight:
 .m .k{font-size:.78rem; color:var(--muted); margin-top:.35rem;}
 .fail{margin-top:1.6rem; background:#fff; border:1px solid #E6C9C2; border-left:4px solid #B03A2E; border-radius:16px; padding:1.1rem 1.3rem;}
 .fail h3{margin:0 0 .3rem; font-size:1.2rem;}
+.flabel{color:var(--pine); font-weight:600; font-size:.86rem; margin:0 0 .35rem; display:flex;
+  justify-content:space-between; gap:1rem; flex-wrap:wrap;}
+.flabel span{color:var(--muted); font-weight:400; font-size:.78rem;}
+iframe[title*="searchbox"]{border-radius:12px; background:transparent;}
 .foot{color:var(--muted); font-size:.78rem; text-align:center; margin:2.4rem 0 1rem; line-height:1.6;}
 </style>
 """, unsafe_allow_html=True)
@@ -158,6 +162,26 @@ def piirang_ok() -> bool:
     return True
 
 
+# Otsingukast elab oma iframe'is – lehe CSS sinna ei ulatu, seega stiil antakse komponendile endale
+OTSINGU_STIIL = {
+    "wrapper": {"backgroundColor": "transparent"},
+    "dropdown": {"width": 0, "height": 0, "fill": "transparent"},
+    "clear": {"icon": "cross", "clearable": "always", "width": 14, "height": 14, "stroke": "#6B726D",
+              "stroke-width": 2.5},
+    "searchbox": {
+        "control": {"backgroundColor": "#FCFBF8", "border": "1px solid #DDD7C9", "borderRadius": "12px",
+                    "minHeight": "46px", "boxShadow": "none", "paddingLeft": "6px", "cursor": "text",
+                    "fontFamily": "Inter, system-ui, -apple-system, sans-serif", "fontSize": "15px"},
+        "placeholder": {"color": "#8A908B"},
+        "singleValue": {"color": "#12372A", "fontWeight": 500},
+        "input": {"color": "#1B1F1D"},
+        "menuList": {"backgroundColor": "#FFFFFF", "borderRadius": "12px", "padding": "4px",
+                     "fontFamily": "Inter, system-ui, -apple-system, sans-serif", "fontSize": "14px"},
+        "option": {"color": "#1B1F1D", "backgroundColor": "#FFFFFF", "highlightColor": "#EDE8DC"},
+        "optionEmpty": "hidden",
+    },
+}
+
 eur = aruanne.eur
 e = html.escape
 
@@ -169,8 +193,9 @@ st.markdown(f"""<div class="hero"><h1>{e(sõnad[0])} <em>{e(sõnad[1])}</em></h1
             unsafe_allow_html=True)
 
 with st.container(border=True):
-    valitud = st_searchbox(otsi_aadressi, label=T("aadress"), key="aadress", placeholder=T("aadress_koht"),
-                           debounce=300, help=T("aadress_abi"))
+    st.markdown(f'<div class="flabel">{T("aadress")}<span>{T("aadress_abi")}</span></div>', unsafe_allow_html=True)
+    valitud = st_searchbox(otsi_aadressi, label=None, key="aadress", placeholder=T("aadress_koht"),
+                           debounce=300, style_overrides=OTSINGU_STIIL)
     g = st.session_state.get("aadressid", {}).get(valitud) if valitud else None
 
     osa_valik = None
