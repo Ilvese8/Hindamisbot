@@ -31,13 +31,12 @@ def bränd_html() -> str:
     if fail:
         mime = "image/svg+xml" if fail.suffix == ".svg" else "image/png"
         märk = (f'<img src="data:{mime};base64,{base64.b64encode(fail.read_bytes()).decode()}" '
-                f'alt="{BRÄND}" style="height:28px; width:auto; display:block">')
+                f'alt="{BRÄND}" style="height:30px; width:auto; display:block">')
     else:
         märk = f'<span class="nimi">{BRÄND}</span>'
-    return (f'<div class="topbar">{märk}<span class="alanimi">{i18n.T("alanimi", st.session_state.get("keel", "et"))}'
-            f'</span></div>')
+    return f'<div class="topbar">{märk}</div>'
 
-st.set_page_config(page_title="Estateguru – hindamisbot", page_icon="🏡",
+st.set_page_config(page_title="Estateguru", page_icon="🏡",
                    layout="centered", initial_sidebar_state="collapsed")
 
 # ------------------------------------------------------------------ kujundus
@@ -57,7 +56,7 @@ html, body, [data-testid="stAppViewContainer"]{
 .block-container{padding-top:1.1rem; max-width:1080px;}
 :focus-visible{outline:2px solid var(--lime)!important; outline-offset:2px;}
 
-.topbar{display:flex; align-items:baseline; gap:.75rem; color:#fff; flex-wrap:wrap;}
+.topbar{display:flex; align-items:center; gap:.9rem; color:#fff; flex-wrap:wrap;}
 .topbar .nimi{font-weight:800; font-size:1.35rem; letter-spacing:-.02em;}
 .topbar .alanimi{color:#9FB2C4; font-size:.86rem; font-weight:500; padding-left:.75rem; border-left:1px solid rgba(255,255,255,.25);}
 [data-testid="stButtonGroup"] button{border-radius:8px!important; border:1px solid rgba(255,255,255,.35)!important;
