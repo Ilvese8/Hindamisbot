@@ -63,6 +63,11 @@ html, body, [data-testid="stAppViewContainer"]{
   background:transparent!important; color:#fff!important; font-weight:600; min-width:2.8rem;}
 [data-testid="stButtonGroup"] button[aria-checked="true"]{background:#fff!important; color:var(--navy)!important;
   border-color:#fff!important;}
+/* Päis: logo vasakul, keelevalik paremal – ka mobiilis ühel real */
+.st-key-paeis [data-testid="stHorizontalBlock"]{flex-wrap:nowrap!important; align-items:center; gap:.5rem;}
+.st-key-paeis [data-testid="stColumn"]{min-width:0!important; width:auto!important; flex:1 1 auto!important;}
+.st-key-paeis [data-testid="stColumn"]:last-child{flex:0 0 auto!important;}
+.st-key-paeis [data-testid="stButtonGroup"]{justify-content:flex-end; margin-left:auto;}
 
 .hero{margin:3rem 0 2.2rem; max-width:720px;}
 .hero h1{font-family:'Inter',sans-serif!important; font-weight:800; color:#F2F7FB!important;
@@ -128,6 +133,10 @@ label, [data-testid="stWidgetLabel"] p{color:var(--tekst)!important; font-weight
 .fail h3{margin:0 0 .3rem; font-size:1.1rem; color:var(--navy)!important;}
 .foot{color:var(--hall); font-size:.78rem; margin:2.6rem 0 1rem; line-height:1.6; max-width:72ch;}
 @media (max-width:760px){
+  .st-key-paeis [data-testid="stButtonGroup"] button{min-width:2.1rem!important; min-height:1.9rem!important;
+    height:1.9rem!important; padding:0 .5rem!important; font-size:.78rem!important;}
+  .st-key-paeis [data-testid="stButtonGroup"] button p{font-size:.78rem!important;}
+  .topbar img{height:24px!important;}
   .result{grid-template-columns:1fr}
   html, body, [data-testid="stAppViewContainer"]{background:linear-gradient(180deg, var(--navy) 0, var(--navy) 420px, var(--tint) 420px);}
   .tempel dd{text-align:left}
@@ -140,16 +149,17 @@ label, [data-testid="stWidgetLabel"] p{color:var(--tekst)!important; font-weight
 if "keel" not in st.session_state:
     st.session_state.keel = "en" if st.query_params.get("lang") == "en" else "et"
 
-vasak, parem = st.columns([5, 1.3], vertical_alignment="center")
-with vasak:
-    st.markdown(bränd_html(), unsafe_allow_html=True)
-with parem:
-    valik = st.segmented_control("Keel / Language", ["ET", "EN"], default=st.session_state.keel.upper(),
-                                 key="keelevalik", label_visibility="collapsed")
-    if valik and valik.lower() != st.session_state.keel:
-        st.session_state.keel = valik.lower()
-        st.query_params["lang"] = st.session_state.keel
-        st.rerun()
+with st.container(key="paeis"):
+    vasak, parem = st.columns([5, 1.3], vertical_alignment="center")
+    with vasak:
+        st.markdown(bränd_html(), unsafe_allow_html=True)
+    with parem:
+        valik = st.segmented_control("Keel / Language", ["ET", "EN"], default=st.session_state.keel.upper(),
+                                     key="keelevalik", label_visibility="collapsed")
+        if valik and valik.lower() != st.session_state.keel:
+            st.session_state.keel = valik.lower()
+            st.query_params["lang"] = st.session_state.keel
+            st.rerun()
 
 K = st.session_state.keel
 
